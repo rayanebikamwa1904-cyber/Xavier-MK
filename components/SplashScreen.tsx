@@ -1,18 +1,16 @@
 import React from 'react';
-import { Sparkles } from 'lucide-react';
 
-const SplashScreen: React.FC = () => {
+const SplashScreen = () => {
   return (
-    <div className="h-screen bg-black flex flex-col items-center justify-center text-white font-sans">
-      <div className="relative w-24 h-24 mb-6">
-        <div className="absolute inset-0 border-4 border-[#FFD700]/20 rounded-full animate-pulse"></div>
-        <div className="absolute inset-0 border-4 border-[#FFD700] rounded-full border-t-transparent animate-spin"></div>
-        <Sparkles className="absolute inset-0 m-auto text-[#FFD700] animate-pulse" size={32} />
+    <div className="fixed inset-0 bg-black flex items-center justify-center z-[100]">
+      <div className="relative">
+        <div className="absolute -inset-0.5 bg-gradient-to-r from-gold-600 to-gold-400 rounded-full blur-2xl opacity-75 animate-pulse"></div>
+        <div className="relative w-40 h-40 flex items-center justify-center bg-black rounded-full">
+          <h1 className="text-4xl font-black text-white tracking-tighter">
+            MY<span className="text-gold-400">FOLIO</span>
+          </h1>
+        </div>
       </div>
-      <h1 className="text-2xl font-black tracking-tighter uppercase mb-2">
-        MY <span className="text-[#FFD700]">FOLIO</span>-TAG
-      </h1>
-      <p className="text-xs text-gray-500 uppercase tracking-widest">L'Arène des Créatifs Congolais</p>
     </div>
   );
 };
