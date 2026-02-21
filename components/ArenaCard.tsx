@@ -1,3 +1,14 @@
+import React from 'react';
+import { Star, MessageCircle, MapPin, ShieldCheck, Eye } from 'lucide-react';
+import { CreatorProfile } from '../types';
+
+interface ArenaCardProps {
+  provider: CreatorProfile;
+  onClick: () => void;
+  onReviewClick: () => void;
+  onTagClick: (tag: string) => void;
+}
+
 const ArenaCard: React.FC<ArenaCardProps> = ({ provider, onClick, onReviewClick, onTagClick }) => {
   // Mapping data safely
   const hero = provider.portfolio.sections.find(s => s.type === 'hero')?.content || {};
@@ -12,85 +23,103 @@ const ArenaCard: React.FC<ArenaCardProps> = ({ provider, onClick, onReviewClick,
     rating: provider.rating,
     reviews: provider.reviewCount,
     isVerified: provider.verified,
-    // On enlève le ! pour laisser le thème parent respirer
     coverImage: hero.backgroundImage || "https://images.unsplash.com/photo-1557683316-973673baf926?auto=format&fit=crop&w=800&q=80",
     avatar: bio.image || social.userAvatar || "https://via.placeholder.com/100",
     phone: provider.phone
   };
   
-  // ... (Garde ta fonction getWhatsAppUrl telle quelle)
+  const getWhatsAppUrl = (phone: string) => {
+    if (!phone) return '#';
+    let clean = phone.replace(/\D/g, '');
+    if (clean.startsWith('0')) clean = '243' + clean.substring(1);
+    else if (!clean.startsWith('243') && clean.length === 9) clean = '243' + clean;
+    return `https://wa.me/${clean}?text=${encodeURIComponent("Bonjour ! Je vous contacte depuis l'Arène My Folio-Tag.")}`;
+  };
+
+  const whatsappUrl = flatProvider.phone ? getWhatsAppUrl(flatProvider.phone) : '#';
 
   return (
-    // J'ai enlevé les "!" inutiles pour éviter le flash blanc au chargement
-    <div className="group relative w-full bg-white/5 backdrop-blur-xl border border-white/10 rounded-[2rem] overflow-hidden transition-all duration-500 hover:border-gold-400/50 hover:shadow-2xl flex flex-col h-[420px]">
+    <div className="group relative w-full bg-white/5 backdrop-blur-2xl border border-white/10 rounded-[2rem] overflow-hidden transition-all duration-500 hover:border-[#FFD700]/50 hover:shadow-[0_0_50px_rgba(255,215,0,0.15)] flex flex-col h-[420px]">
       
-      {/* 1. COVER HERO */}
+      {/* --- 1. COVER HERO --- */}
       <div className="h-40 relative overflow-hidden shrink-0">
         <img 
             src={flatProvider.coverImage} 
             alt={flatProvider.name} 
-            className="w-full h-full object-cover opacity-60 group-hover:opacity-100 group-hover:scale-105 transition duration-700 ease-out"
+            className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-110 transition duration-700 ease-out"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent"></div>
         
         {flatProvider.isVerified && (
-            <div className="absolute top-3 right-3 bg-gold-400 text-black text-[10px] font-black px-3 py-1 rounded-full flex items-center gap-1 shadow-lg z-20 uppercase">
+            <div className="absolute top-3 right-3 bg-[#FFD700] text-black text-[10px] font-black px-3 py-1 rounded-full flex items-center gap-1 shadow-lg z-20 tracking-widest uppercase border border-white/20">
                 <ShieldCheck size={12} strokeWidth={3} /> Certifié
             </div>
         )}
       </div>
 
-      {/* 2. IDENTITY */}
+      {/* --- 2. IDENTITY --- */}
       <div className="px-6 relative flex-1 flex flex-col">
-        <div className="absolute -top-10 left-6">
-            <div className="relative w-20 h-20 rounded-full p-1 bg-gradient-to-tr from-gold-400 to-yellow-600">
-                <img 
-                    src={flatProvider.avatar} 
-                    className="w-full h-full rounded-full object-cover border-2 border-black" 
-                    alt="Avatar"
-                />
+        <div className="absolute -top-12 left-6">
+            <div className="relative group/avatar">
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-[#FFD700] to-[#FDB931] rounded-full opacity-75 blur group-hover/avatar:opacity-100 transition duration-500"></div>
+                <div className="relative w-24 h-24 rounded-full p-0.5 bg-black">
+                    <img 
+                        src={flatProvider.avatar} 
+                        className="w-full h-full rounded-full object-cover" 
+                        alt="Avatar"
+                    />
+                </div>
             </div>
         </div>
 
-        <div className="pt-12 mb-4">
-            <h3 className="text-xl font-bold text-white mb-1 truncate group-hover:text-gold-400 transition-colors">
+        <div className="pt-14 mb-4">
+            <h3 className="text-2xl font-black text-white mb-1 font-serif tracking-tight truncate group-hover:text-[#FFD700] transition-colors">
                 {flatProvider.name}
             </h3>
-            <div className="flex items-center gap-2 text-gray-400 text-[10px] uppercase tracking-widest">
-                <span className="text-gold-400 font-bold">{flatProvider.profession}</span>
+            <div className="flex items-center gap-2 text-gray-400 text-xs font-medium uppercase tracking-wide">
+                <span className="text-[#FFD700] font-bold">{flatProvider.profession}</span>
                 <span className="w-1 h-1 bg-gray-600 rounded-full"></span>
                 <span className="flex items-center gap-1"><MapPin size={10} /> {flatProvider.location}</span>
             </div>
+            <div className="flex flex-wrap gap-2 mt-2">
+                {provider.tags?.map((tag, index) => (
+                    <button key={index} onClick={() => onTagClick(tag)} className="text-[10px] bg-white/5 text-gray-400 px-2 py-1 rounded hover:bg-[#FFD700] hover:text-black transition">
+                        #{tag}
+                    </button>
+                ))}
+            </div>
         </div>
 
-        {/* 3. ACTION BAR */}
+        {/* --- 3. ACTION BAR --- */}
         <div className="mt-auto pb-6 grid grid-cols-3 gap-2">
-            
-            {/* WhatsApp */}
-            <a href={whatsappUrl} target="_blank" rel="noreferrer" className="flex flex-col items-center justify-center gap-1 py-3 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-green-600 transition-all">
-                <MessageCircle size={18} />
-                <span className="text-[8px] font-bold uppercase">Discuter</span>
-            </a>
+            {flatProvider.phone ? (
+                <a href={whatsappUrl} target="_blank" rel="noreferrer" className="flex flex-col items-center justify-center gap-1 py-3 rounded-2xl bg-white/5 border border-white/10 text-white hover:bg-[#25D366] transition-all">
+                    <MessageCircle size={18} />
+                    <span className="text-[9px] font-black uppercase">Discuter</span>
+                </a>
+            ) : (
+                <div className="flex flex-col items-center justify-center gap-1 py-3 rounded-2xl bg-white/5 border border-white/5 text-gray-700 cursor-not-allowed opacity-50">
+                    <MessageCircle size={18} />
+                    <span className="text-[9px] font-black uppercase tracking-wider">N/A</span>
+                </div>
+            )}
 
-            {/* Avis */}
-            <button onClick={(e) => { e.stopPropagation(); onReviewClick(); }} className="flex flex-col items-center justify-center gap-1 py-3 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white hover:text-black transition-all">
+            <button onClick={(e) => { e.stopPropagation(); onReviewClick(); }} className="flex flex-col items-center justify-center gap-1 py-3 rounded-2xl bg-white/5 border border-white/10 text-white hover:bg-white hover:text-black transition-all">
                 <div className="flex items-center gap-1">
-                    <Star size={10} className="fill-gold-400 text-gold-400"/>
+                    <Star size={12} className="fill-[#FFD700] text-[#FFD700]"/>
                     <span className="text-xs font-bold">{flatProvider.rating}</span>
                 </div>
-                <span className="text-[8px] font-bold uppercase">{flatProvider.reviews} Avis</span>
+                <span className="text-[9px] font-black uppercase">{flatProvider.reviews} Avis</span>
             </button>
 
-            {/* Portfolio - C'est ici qu'on va rediriger vers l'ID unique */}
-            <button 
-                onClick={onClick}
-                className="flex flex-col items-center justify-center gap-1 py-3 rounded-xl bg-gold-400 text-black font-bold hover:scale-105 transition-all"
-            >
-                <Eye size={18} />
-                <span className="text-[8px] font-black uppercase">Voir Site</span>
+            <button onClick={onClick} className="flex flex-col items-center justify-center gap-1 py-3 rounded-2xl bg-[#FFD700] text-black border border-[#FFD700] hover:bg-[#FDB931] hover:scale-105 transition-all shadow-[0_0_15px_rgba(255,215,0,0.3)]">
+                <Eye size={18} strokeWidth={2.5} />
+                <span className="text-[9px] font-black uppercase tracking-wider">Voir Site</span>
             </button>
         </div>
       </div>
     </div>
   );
 };
+
+export default ArenaCard;
