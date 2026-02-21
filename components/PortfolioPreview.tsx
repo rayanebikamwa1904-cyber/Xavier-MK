@@ -18,10 +18,8 @@ import TestimonialsLegos from './TestimonialsLego';
 
 const generateWhatsAppLink = (phone: string, itemName: string, type: 'commander' | 'réserver' | 'discuter de') => {
   if (!phone) return '#';
-  // Nettoyage rigoureux : ne garder que les chiffres
   let cleanPhone = phone.replace(/\D/g, '');
   
-  // Logique spécifique RDC si nécessaire (déjà gérée par l'utilisateur lors de la saisie, mais on assure le format wa.me)
   if (cleanPhone.startsWith('0')) {
     cleanPhone = '243' + cleanPhone.substring(1);
   } else if (!cleanPhone.startsWith('243') && cleanPhone.length === 9) {
@@ -32,7 +30,7 @@ const generateWhatsAppLink = (phone: string, itemName: string, type: 'commander'
   return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
 };
 
-const CatalogueLegos = ({ items, phone }: { items: any[], phone: string }) => {
+const CatalogueLegos = ({ items, phone, labels }: { items: any[], phone: string, labels: any }) => {
   const [currency, setCurrency] = useState('USD');
 
   const convertPrice = (price: string) => {
@@ -44,11 +42,13 @@ const CatalogueLegos = ({ items, phone }: { items: any[], phone: string }) => {
     return price;
   };
 
+  if (!items || items.length === 0) return null;
+
   return (
   <section id="portfolio" className="py-32 px-6 max-w-7xl mx-auto">
     <div className="text-center mb-16">
-      <h3 className="text-[#FFD700] text-sm font-bold uppercase tracking-widest mb-2">Catalogue</h3>
-      <h2 className="text-4xl md:text-5xl font-bold text-white font-serif">Articles & Tarifs</h2>
+      {labels?.catalogueSubtitle && <h3 className="text-[#FFD700] text-sm font-bold uppercase tracking-widest mb-2">{labels.catalogueSubtitle}</h3>}
+      {labels?.catalogueTitle && <h2 className="text-4xl md:text-5xl font-bold text-white font-serif">{labels.catalogueTitle}</h2>}
       <div className="mt-4">
         <button onClick={() => setCurrency('USD')} className={`px-4 py-2 rounded-l-full ${currency === 'USD' ? 'bg-gold-400 text-black' : 'bg-white/10 text-white'}`}>USD</button>
         <button onClick={() => setCurrency('CDF')} className={`px-4 py-2 rounded-r-full ${currency === 'CDF' ? 'bg-gold-400 text-black' : 'bg-white/10 text-white'}`}>CDF</button>
@@ -63,29 +63,29 @@ const CatalogueLegos = ({ items, phone }: { items: any[], phone: string }) => {
           viewport={{ once: true }}
           className="bg-[#111] border border-white/5 rounded-2xl overflow-hidden group hover:border-[#FFD700]/30 transition duration-500"
         >
-          <div className="h-64 bg-gray-900 relative overflow-hidden">
-            <img src={item.images?.[0] || "https://via.placeholder.com/400x400"} className="w-full h-full object-cover group-hover:scale-110 transition duration-700" alt={item.title} />
-            <div className="absolute top-4 right-4 bg-black/80 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 text-[#FFD700] font-bold text-sm">
-              {convertPrice(item.price)}
+          {item.images?.[0] && (
+            <div className="h-64 bg-gray-900 relative overflow-hidden">
+              <img src={item.images[0]} className="w-full h-full object-cover group-hover:scale-110 transition duration-700" alt={item.title} />
+              {item.price && (
+                <div className="absolute top-4 right-4 bg-black/80 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 text-[#FFD700] font-bold text-sm">
+                  {convertPrice(item.price)}
+                </div>
+              )}
             </div>
-          </div>
+          )}
           <div className="p-6">
-            <h3 className="text-xl font-bold text-white mb-2 font-serif">{item.title}</h3>
-            <p className="text-gray-500 text-sm mb-6 line-clamp-2">{item.description}</p>
+            {item.title && <h3 className="text-xl font-bold text-white mb-2 font-serif">{item.title}</h3>}
+            {item.description && <p className="text-gray-500 text-sm mb-6 line-clamp-2">{item.description}</p>}
             {phone ? (
               <a 
-                href={generateWhatsAppLink(phone, item.title, 'commander')}
+                href={generateWhatsAppLink(phone, item.title || 'cet article', 'commander')}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full py-3 bg-white/5 border border-white/10 text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-[#FFD700] hover:text-black transition flex items-center justify-center gap-2"
               >
-                <ShoppingCart size={14} /> Commander
+                <ShoppingCart size={14} /> {labels?.orderButton || 'Commander'}
               </a>
-            ) : (
-              <div className="w-full py-3 bg-white/5 border border-white/5 text-gray-600 rounded-xl font-bold text-[10px] uppercase text-center italic">
-                Contact non configuré
-              </div>
-            )}
+            ) : null}
           </div>
         </motion.div>
       ))}
@@ -93,11 +93,14 @@ const CatalogueLegos = ({ items, phone }: { items: any[], phone: string }) => {
   </section>
 )};
 
-const ServicesLegos = ({ items, phone }: { items: any[], phone: string }) => (
-  <section id="portfolio" className="py-32 px-6 max-w-7xl mx-auto">
+const ServicesLegos = ({ items, phone, labels }: { items: any[], phone: string, labels: any }) => {
+  if (!items || items.length === 0) return null;
+
+  return (
+  <section id="services" className="py-32 px-6 max-w-7xl mx-auto">
     <div className="text-center mb-16">
-      <h3 className="text-[#FFD700] text-sm font-bold uppercase tracking-widest mb-2">Services</h3>
-      <h2 className="text-4xl md:text-5xl font-bold text-white font-serif">Prestations & Expertise</h2>
+      {labels?.servicesSubtitle && <h3 className="text-[#FFD700] text-sm font-bold uppercase tracking-widest mb-2">{labels.servicesSubtitle}</h3>}
+      {labels?.servicesTitle && <h2 className="text-4xl md:text-5xl font-bold text-white font-serif">{labels.servicesTitle}</h2>}
     </div>
     <div className="space-y-6">
       {items.map((item, idx) => (
@@ -109,29 +112,27 @@ const ServicesLegos = ({ items, phone }: { items: any[], phone: string }) => (
           className="bg-[#111] border border-white/5 p-8 rounded-3xl flex flex-col md:flex-row justify-between items-center gap-6 hover:bg-white/5 transition group"
         >
           <div className="flex-1">
-            <h3 className="text-2xl font-bold text-white mb-2 font-serif group-hover:text-[#FFD700] transition">{item.title}</h3>
-            <p className="text-gray-400 text-sm max-w-2xl">{item.description}</p>
+            {item.title && <h3 className="text-2xl font-bold text-white mb-2 font-serif group-hover:text-[#FFD700] transition">{item.title}</h3>}
+            {item.description && <p className="text-gray-400 text-sm max-w-2xl">{item.description}</p>}
           </div>
           <div className="flex flex-col items-end gap-3">
-            <div className="text-2xl font-black text-white">{item.price}</div>
+            {item.price && <div className="text-2xl font-black text-white">{item.price}</div>}
             {phone ? (
               <a 
-                href={generateWhatsAppLink(phone, item.title, 'réserver')}
+                href={generateWhatsAppLink(phone, item.title || 'ce service', 'réserver')}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="px-6 py-3 bg-[#FFD700] text-black rounded-full font-bold text-xs uppercase tracking-widest hover:bg-white transition flex items-center gap-2"
               >
-                <Calendar size={14} /> Réserver un créneau
+                <Calendar size={14} /> {labels?.reserveButton || 'Réserver'}
               </a>
-            ) : (
-              <div className="text-[10px] text-gray-600 italic">Contact non configuré</div>
-            )}
+            ) : null}
           </div>
         </motion.div>
       ))}
     </div>
   </section>
-);
+)};
 
 interface PortfolioPreviewProps {
   config: PortfolioConfig;
@@ -140,6 +141,7 @@ interface PortfolioPreviewProps {
   isMobileView?: boolean;
   onBack?: () => void;
   expiryDate?: string;
+  creatorData?: any; 
 }
 
 interface PortfolioPost {
@@ -150,18 +152,30 @@ interface PortfolioPost {
   createdAt: any;
 }
 
-const PortfolioPreview: React.FC<PortfolioPreviewProps> = ({ config, phone, creatorId, onBack, expiryDate }) => {
+const PortfolioPreview: React.FC<PortfolioPreviewProps> = ({ config, phone, creatorId, onBack, expiryDate, creatorData }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
   const [posts, setPosts] = useState<PortfolioPost[]>([]);
 
+  // EXTRACTION STRICTE DES DONNÉES (Zéro Simulation)
+  const sections = config.sections || [];
+  const hero = sections.find(s => s.type === 'hero')?.content || {};
+  const bio = sections.find(s => s.type === 'bio')?.content || {};
+  const contact = sections.find(s => s.type === 'contact')?.content || {};
+  const services = sections.find(s => s.type === 'services')?.content?.items || [];
+  const gallery = sections.find(s => s.type === 'gallery')?.content?.images || [];
+  const testimonials = sections.find(s => s.type === 'testimonials')?.content?.items || [];
+  
+  // Stats strictement liées aux données entrées
+  const stats = bio.stats;
+  // Labels dynamiques récupérés du profil
+  const labels = creatorData?.labels || config.labels || {};
+
   const handleVCardExport = () => {
     const card = new vCard();
-    card.add('fn', config.sections.find(s => s.type === 'hero')?.content.title);
-    if (phone) {
-      card.add('tel', phone, { type: 'work' });
-    }
+    if (hero.title) card.add('fn', hero.title);
+    if (phone) card.add('tel', phone, { type: 'work' });
     card.add('url', window.location.href);
 
     const cardData = card.toString();
@@ -170,7 +184,7 @@ const PortfolioPreview: React.FC<PortfolioPreviewProps> = ({ config, phone, crea
 
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${config.sections.find(s => s.type === 'hero')?.content.title}.vcf`;
+    a.download = `${hero.title || 'Contact'}.vcf`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -189,7 +203,7 @@ const PortfolioPreview: React.FC<PortfolioPreviewProps> = ({ config, phone, crea
     );
   }
 
-  // --- LIVE POSTS SYNC (Filtered by Creator) ---
+  // --- LIVE POSTS SYNC ---
   useEffect(() => {
     if (!creatorId) return;
 
@@ -211,17 +225,6 @@ const PortfolioPreview: React.FC<PortfolioPreviewProps> = ({ config, phone, crea
     return () => unsubscribe();
   }, [creatorId]);
 
-  // EXTRACTION DES DONNÉES
-  const sections = config.sections;
-  const hero = sections.find(s => s.type === 'hero')?.content || {};
-  const bio = sections.find(s => s.type === 'bio')?.content || {};
-  const contact = sections.find(s => s.type === 'contact')?.content || {};
-  const services = sections.find(s => s.type === 'services')?.content?.items || [];
-  const gallery = sections.find(s => s.type === 'gallery')?.content?.images || [];
-  
-  // Stats (si injectées) ou fallback
-  const stats = bio.stats || { years: 5, projects: 20 };
-
   // SCROLL EFFECT
   useEffect(() => {
     const handleScroll = () => {
@@ -239,85 +242,94 @@ const PortfolioPreview: React.FC<PortfolioPreviewProps> = ({ config, phone, crea
     }
   };
 
-  // STYLES
   const fontSerif = "font-serif";
 
   // --- COMPONENTS ---
 
-  const Navbar = () => (
-    <motion.nav 
-      initial={{ y: -100 }}
-      animate={{ y: 0 }}
-      className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-black/90 backdrop-blur-md border-b border-white/10 py-3' : 'bg-transparent py-6'}`}
-    >
-      <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
-        <div className="flex items-center gap-4">
-            {onBack && (
-                <button 
-                  onClick={onBack} 
-                  className="p-2 bg-white/10 rounded-full hover:bg-[#FFD700] hover:text-black transition duration-300 backdrop-blur-md border border-white/10"
-                  title="Retour à l'Arène"
+  const Navbar = () => {
+    // Ne générer le menu que pour les sections qui existent vraiment
+    const menuItems = [];
+    if (hero.title || hero.subtitle || hero.backgroundImage) menuItems.push({ label: labels?.navHome || 'ACCUEIL', id: 'hero' });
+    if (bio.description || bio.image) menuItems.push({ label: labels?.navBio || 'BIO', id: 'bio' });
+    if (services.length > 0) menuItems.push({ label: labels?.navServices || 'SERVICES', id: 'services' });
+    if (gallery.length > 0) menuItems.push({ label: labels?.navGallery || 'PORTFOLIO', id: 'portfolio' });
+    if (phone || contact.email) menuItems.push({ label: labels?.navContact || 'CONTACT', id: 'contact' });
+
+    return (
+      <motion.nav 
+        initial={{ y: -100 }}
+        animate={{ y: 0 }}
+        className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-black/90 backdrop-blur-md border-b border-white/10 py-3' : 'bg-transparent py-6'}`}
+      >
+        <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
+          <div className="flex items-center gap-4">
+              {onBack && (
+                  <button 
+                    onClick={onBack} 
+                    className="p-2 bg-white/10 rounded-full hover:bg-[#FFD700] hover:text-black transition duration-300 backdrop-blur-md border border-white/10"
+                    title="Retour"
+                  >
+                      <ArrowLeft size={18} />
+                  </button>
+              )}
+              
+              {hero.title && (
+                <div 
+                  className="text-xl md:text-2xl font-bold tracking-tighter flex items-center gap-1 cursor-pointer" 
+                  onClick={() => scrollToSection('hero')}
                 >
-                    <ArrowLeft size={18} />
-                </button>
-            )}
-            
-            {/* LOGO */}
-            <div 
-              className="text-xl md:text-2xl font-bold tracking-tighter flex items-center gap-1 cursor-pointer" 
-              onClick={() => scrollToSection('hero')}
-            >
-              <span className="text-[#FFD700] drop-shadow-md font-serif italic">{hero.title?.split(' ')[0] || 'MY'}</span>
-              <span className="text-white uppercase tracking-widest text-sm md:text-base ml-1">{hero.title?.split(' ').slice(1).join(' ') || 'FOLIO'}</span>
-            </div>
-        </div>
+                  <span className="text-[#FFD700] drop-shadow-md font-serif italic">{hero.title.split(' ')[0]}</span>
+                  <span className="text-white uppercase tracking-widest text-sm md:text-base ml-1">{hero.title.split(' ').slice(1).join(' ')}</span>
+                </div>
+              )}
+          </div>
 
-        {/* DESKTOP LINKS */}
-        <div className="hidden md:flex gap-8">
-          {['ACCUEIL', 'BIO', 'SERVICES', 'RÉALISATIONS', 'CONTACT'].map((item) => (
-            <button
-              key={item}
-              onClick={() => scrollToSection(item === 'ACCUEIL' ? 'hero' : item.toLowerCase().replace('é', 'e'))}
-              className="text-xs font-bold uppercase tracking-widest text-gray-300 hover:text-[#FFD700] transition-colors relative group"
-            >
-              {item}
-              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-[#FFD700] transition-all group-hover:w-full"></span>
-            </button>
-          ))}
-        </div>
-
-        {/* MOBILE MENU TOGGLE */}
-        <button className="md:hidden text-white p-2" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-          {mobileMenuOpen ? <CloseIcon /> : <Menu />}
-        </button>
-      </div>
-
-      {/* MOBILE MENU */}
-      <AnimatePresence>
-        {mobileMenuOpen && (
-          <motion.div 
-            initial={{ opacity: 0, x: '100%' }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: '100%' }}
-            className="fixed inset-0 bg-black z-40 flex flex-col items-center justify-center gap-8 md:hidden"
-          >
-             {['ACCUEIL', 'BIO', 'SERVICES', 'RÉALISATIONS', 'CONTACT'].map((item) => (
+          <div className="hidden md:flex gap-8">
+            {menuItems.map((item) => (
               <button
-                key={item}
-                onClick={() => scrollToSection(item === 'ACCUEIL' ? 'hero' : item.toLowerCase().replace('é', 'e'))}
-                className="text-2xl font-serif font-bold text-white hover:text-[#FFD700] transition-colors"
+                key={item.id}
+                onClick={() => scrollToSection(item.id)}
+                className="text-xs font-bold uppercase tracking-widest text-gray-300 hover:text-[#FFD700] transition-colors relative group"
               >
-                {item}
+                {item.label}
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-[#FFD700] transition-all group-hover:w-full"></span>
               </button>
             ))}
-            <button onClick={() => setMobileMenuOpen(false)} className="absolute top-6 right-6 text-white p-2">
-                <CloseIcon size={32} />
+          </div>
+
+          {menuItems.length > 0 && (
+            <button className="md:hidden text-white p-2" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+              {mobileMenuOpen ? <CloseIcon /> : <Menu />}
             </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.nav>
-  );
+          )}
+        </div>
+
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <motion.div 
+              initial={{ opacity: 0, x: '100%' }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: '100%' }}
+              className="fixed inset-0 bg-black z-40 flex flex-col items-center justify-center gap-8 md:hidden"
+            >
+               {menuItems.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => scrollToSection(item.id)}
+                  className="text-2xl font-serif font-bold text-white hover:text-[#FFD700] transition-colors"
+                >
+                  {item.label}
+                </button>
+              ))}
+              <button onClick={() => setMobileMenuOpen(false)} className="absolute top-6 right-6 text-white p-2">
+                  <CloseIcon size={32} />
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.nav>
+    );
+  };
 
   const Lightbox = () => (
     <AnimatePresence>
@@ -344,237 +356,261 @@ const PortfolioPreview: React.FC<PortfolioPreviewProps> = ({ config, phone, crea
     </AnimatePresence>
   );
 
-  // --- SECTIONS ---
-
   return (
     <div className="bg-[#0d0d0d] text-white font-sans selection:bg-[#FFD700] selection:text-black overflow-x-hidden">
       <SEO 
-        title={`${hero.title || 'Artiste'} | Portfolio Officiel`}
-        description={`Découvrez l'univers de ${hero.title || 'ce créatif'}, expert en ${hero.subtitle || 'son domaine'}. Visitez son Empire numérique sur My Folio-Tag.`}
+        title={hero.title ? `${hero.title} | Portfolio Officiel` : 'Portfolio'}
+        description={bio.description || ''}
         image={hero.backgroundImage || bio.image}
         type="profile"
       />
       <Navbar />
       <Lightbox />
 
-      {/* 1. HERO SECTION */}
-      <section id="hero" className="relative h-screen w-full flex items-center justify-center overflow-hidden">
-        <div 
-            className="absolute inset-0 bg-cover bg-center bg-fixed"
-            style={{ backgroundImage: `url(${hero.backgroundImage || "https://images.unsplash.com/photo-1600607686527-6fb886090705?auto=format&fit=crop&w=2000&q=80"})` }}
-        ></div>
-        <div className="absolute inset-0 bg-black/70"></div>
-        
-        <div className="relative z-10 text-center px-4 max-w-5xl mx-auto">
-            <motion.h1 
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, ease: "easeOut" }}
-              className={`text-6xl md:text-9xl font-bold text-white mb-4 ${fontSerif} tracking-tighter`}
-            >
-                {hero.title}
-            </motion.h1>
-            
-            <motion.h2 
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
-              className="text-xl md:text-3xl text-[#FFD700] font-light tracking-[0.2em] uppercase mb-12"
-            >
-                {hero.subtitle}
-            </motion.h2>
+      {/* 1. HERO SECTION (Ne s'affiche que si des données existent) */}
+      {(hero.title || hero.subtitle || hero.backgroundImage) && (
+        <section id="hero" className="relative h-screen w-full flex items-center justify-center overflow-hidden">
+          {hero.backgroundImage && (
+            <div 
+                className="absolute inset-0 bg-cover bg-center bg-fixed"
+                style={{ backgroundImage: `url(${hero.backgroundImage})` }}
+            ></div>
+          )}
+          <div className="absolute inset-0 bg-black/70"></div>
+          
+          <div className="relative z-10 text-center px-4 max-w-5xl mx-auto">
+              {hero.title && (
+                <motion.h1 
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, ease: "easeOut" }}
+                  className={`text-6xl md:text-9xl font-bold text-white mb-4 ${fontSerif} tracking-tighter`}
+                >
+                    {hero.title}
+                </motion.h1>
+              )}
+              
+              {hero.subtitle && (
+                <motion.h2 
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+                  className="text-xl md:text-3xl text-[#FFD700] font-light tracking-[0.2em] uppercase mb-12"
+                >
+                    {hero.subtitle}
+                </motion.h2>
+              )}
 
-            <motion.button 
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: 0.4 }}
-              onClick={() => scrollToSection('portfolio')}
-              className="px-10 py-4 bg-[#FFD700] text-black font-bold uppercase tracking-widest hover:bg-white transition duration-300 rounded-sm"
-            >
-                Voir mes projets
-            </motion.button>
-            <motion.button 
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: 0.6 }}
-              onClick={handleVCardExport}
-              className="px-10 py-4 bg-transparent border border-[#FFD700] text-[#FFD700] font-bold uppercase tracking-widest hover:bg-[#FFD700] hover:text-black transition duration-300 rounded-sm flex items-center justify-center gap-2"
-            >
-                <UserPlus size={16}/> Ajouter aux contacts
-            </motion.button>
-        </div>
-
-        {/* Scroll Indicator */}
-        <motion.div 
-          animate={{ y: [0, 10, 0] }}
-          transition={{ repeat: Infinity, duration: 2 }}
-          className="absolute bottom-10 left-1/2 -translate-x-1/2 text-gray-500 flex flex-col items-center gap-2"
-        >
-            <span className="text-[10px] uppercase tracking-widest">Scroll</span>
-            <div className="w-px h-12 bg-gradient-to-b from-gray-500 to-transparent"></div>
-        </motion.div>
-      </section>
-
-      {/* 2. BIO SECTION (Magazine Layout) */}
-      <section id="bio" className="py-32 px-6 max-w-7xl mx-auto">
-         <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
-            {/* Image (Asymétrique) */}
-            <motion.div 
-              initial={{ opacity: 0, x: -50 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
-              className="lg:col-span-5 relative"
-            >
-                <div className="absolute top-4 -left-4 w-full h-full border-2 border-[#FFD700] z-0"></div>
-                <div className="relative z-10 aspect-[3/4] overflow-hidden bg-gray-900 grayscale hover:grayscale-0 transition duration-700">
-                    <img 
-                      src={bio.image || "https://via.placeholder.com/600x800"} 
-                      className="w-full h-full object-cover" 
-                      alt="Portrait"
-                    />
-                </div>
-            </motion.div>
-
-            {/* Content */}
-            <motion.div 
-              initial={{ opacity: 0, x: 50 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
-              className="lg:col-span-7"
-            >
-                <h3 className="text-[#FFD700] text-sm font-bold uppercase tracking-widest mb-4 flex items-center gap-2">
-                   <span className="w-8 h-px bg-[#FFD700]"></span> À Propos
-                </h3>
-                <h2 className={`text-4xl md:text-6xl font-bold text-white mb-8 ${fontSerif} leading-tight`}>
-                  Créer avec passion, <br/> livrer avec excellence.
-                </h2>
-                <div className="text-gray-400 text-lg leading-relaxed space-y-6 mb-12 font-light">
-                   <p>{bio.description || "Je suis un visionnaire dédié à transformer vos idées en réalité tangible. Mon approche combine esthétique intemporelle et fonctionnalité moderne."}</p>
-                   <p>Chaque détail compte. Dans un monde de bruit, je choisis la clarté et l'impact.</p>
-                </div>
-
-                {/* Stats */}
-                <div className="grid grid-cols-2 gap-8 border-t border-white/10 pt-8">
-                    <div>
-                        <span className={`block text-5xl font-bold text-white mb-2 ${fontSerif}`}>{stats.years}+</span>
-                        <span className="text-xs text-gray-500 uppercase tracking-widest">Années d'expérience</span>
-                    </div>
-                    <div>
-                        <span className={`block text-5xl font-bold text-white mb-2 ${fontSerif}`}>{stats.projects}</span>
-                        <span className="text-xs text-gray-500 uppercase tracking-widest">Projets Livrés</span>
-                    </div>
-                </div>
-
-                {/* Signature */}
-                <div className="mt-12 font-serif italic text-3xl text-[#FFD700] opacity-80">
-                  {bio.name}
-                </div>
-            </motion.div>
-         </div>
-      </section>
-
-      {/* 3. SERVICES SECTION */}
-      <section id="services" className="py-32 bg-[#111]">
-         <div className="max-w-7xl mx-auto px-6">
-            <div className="text-center mb-20">
-                <h2 className={`text-4xl md:text-5xl font-bold text-white mb-4 ${fontSerif}`}>Ce Que Je Propose</h2>
-                <div className="w-24 h-1 bg-[#FFD700] mx-auto"></div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-               {services.map((item: any, idx: number) => (
-                  <motion.div 
-                    key={idx}
-                    initial={{ opacity: 0, y: 30 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: idx * 0.1 }}
-                    className="group bg-[#0d0d0d] border border-white/5 p-8 hover:-translate-y-2 transition-all duration-300 hover:border-[#FFD700]/50 relative overflow-hidden"
+              <div className="flex flex-col md:flex-row gap-4 justify-center items-center mt-8">
+                {gallery.length > 0 && (
+                  <motion.button 
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.5, delay: 0.4 }}
+                    onClick={() => scrollToSection('portfolio')}
+                    className="px-10 py-4 bg-[#FFD700] text-black font-bold uppercase tracking-widest hover:bg-white transition duration-300 rounded-sm"
                   >
-                      <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
-                         <Star size={80} />
-                      </div>
-                      
-                      <div className="w-12 h-12 bg-[#FFD700]/10 rounded-full flex items-center justify-center text-[#FFD700] mb-6 group-hover:bg-[#FFD700] group-hover:text-black transition">
-                         <CheckCircle size={24} />
-                      </div>
-
-                      <h3 className={`text-2xl font-bold text-white mb-3 ${fontSerif}`}>{item.title || item.name}</h3>
-                      <p className="text-gray-400 text-sm leading-relaxed mb-6">
-                        {item.description || "Un service sur-mesure adapté à vos besoins spécifiques."}
-                      </p>
-                      
-                      {item.price && (
-                        <div className="text-[#FFD700] font-bold text-lg">
-                           {item.price}
-                        </div>
-                      )}
-                  </motion.div>
-               ))}
-            </div>
-         </div>
-      </section>
-
-      {/* 4. ZONE CENTRALE DYNAMIQUE */}
-      {(!config.layoutType || config.layoutType === 'GALLERY') && (
-        <section id="portfolio" className="py-32 px-6 max-w-7xl mx-auto">
-            <div className="flex justify-between items-end mb-16">
-                <div>
-                   <h3 className="text-[#FFD700] text-sm font-bold uppercase tracking-widest mb-2">Portfolio</h3>
-                   <h2 className={`text-4xl md:text-5xl font-bold text-white ${fontSerif}`}>Réalisations</h2>
-                </div>
-                <div className="hidden md:block text-gray-500 text-sm">
-                   Une sélection de mes meilleurs travaux
-                </div>
-            </div>
-
-            {gallery.length > 0 ? (
-              <div className="columns-1 md:columns-2 lg:columns-3 gap-8 space-y-8">
-                 {gallery.map((img: string, idx: number) => (
-                    <motion.div 
-                      key={idx}
-                      initial={{ opacity: 0 }}
-                      whileInView={{ opacity: 1 }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 0.5 }}
-                      className="break-inside-avoid relative group cursor-zoom-in overflow-hidden"
-                      onClick={() => setLightboxImage(img)}
-                    >
-                        <img src={img} className="w-full object-cover grayscale group-hover:grayscale-0 transition duration-700 transform group-hover:scale-105" alt={`Project ${idx}`} />
-                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
-                            <span className="text-white uppercase tracking-widest text-xs font-bold border border-white px-4 py-2">Voir</span>
-                        </div>
-                    </motion.div>
-                 ))}
+                      {labels?.heroButton1 || 'Voir mes projets'}
+                  </motion.button>
+                )}
+                {hero.title && (
+                  <motion.button 
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.5, delay: 0.6 }}
+                    onClick={handleVCardExport}
+                    className="px-10 py-4 bg-transparent border border-[#FFD700] text-[#FFD700] font-bold uppercase tracking-widest hover:bg-[#FFD700] hover:text-black transition duration-300 rounded-sm flex items-center justify-center gap-2"
+                  >
+                      <UserPlus size={16}/> {labels?.heroButton2 || 'Ajouter aux contacts'}
+                  </motion.button>
+                )}
               </div>
-            ) : (
-              <div className="text-center text-gray-500 py-20 border border-dashed border-white/10">
-                 Aucune image dans la galerie pour le moment.
-              </div>
-            )}
+          </div>
+
+          <motion.div 
+            animate={{ y: [0, 10, 0] }}
+            transition={{ repeat: Infinity, duration: 2 }}
+            className="absolute bottom-10 left-1/2 -translate-x-1/2 text-gray-500 flex flex-col items-center gap-2"
+          >
+              <div className="w-px h-12 bg-gradient-to-b from-gray-500 to-transparent"></div>
+          </motion.div>
         </section>
       )}
 
+      {/* 2. BIO SECTION */}
+      {(bio.description || bio.image || stats) && (
+        <section id="bio" className="py-32 px-6 max-w-7xl mx-auto">
+           <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
+              {/* Image */}
+              {bio.image ? (
+                <motion.div 
+                  initial={{ opacity: 0, x: -50 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.8 }}
+                  className="lg:col-span-5 relative"
+                >
+                    <div className="absolute top-4 -left-4 w-full h-full border-2 border-[#FFD700] z-0"></div>
+                    <div className="relative z-10 aspect-[3/4] overflow-hidden bg-gray-900 grayscale hover:grayscale-0 transition duration-700">
+                        <img 
+                          src={bio.image} 
+                          className="w-full h-full object-cover" 
+                          alt={bio.name || "Portrait"}
+                        />
+                    </div>
+                </motion.div>
+              ) : (
+                <div className="lg:col-span-5 hidden lg:block"></div>
+              )}
+
+              {/* Content */}
+              <motion.div 
+                initial={{ opacity: 0, x: 50 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.8 }}
+                className={bio.image ? "lg:col-span-7" : "lg:col-span-12"}
+              >
+                  {labels?.bioSubtitle && (
+                    <h3 className="text-[#FFD700] text-sm font-bold uppercase tracking-widest mb-4 flex items-center gap-2">
+                      <span className="w-8 h-px bg-[#FFD700]"></span> {labels.bioSubtitle}
+                    </h3>
+                  )}
+                  {labels?.bioTitle && (
+                    <h2 className={`text-4xl md:text-6xl font-bold text-white mb-8 ${fontSerif} leading-tight`}>
+                      {labels.bioTitle}
+                    </h2>
+                  )}
+                  
+                  {bio.description && (
+                    <div className="text-gray-400 text-lg leading-relaxed space-y-6 mb-12 font-light whitespace-pre-line">
+                       {bio.description}
+                    </div>
+                  )}
+
+                  {/* Stats dynamiques */}
+                  {stats && (stats.years || stats.projects) && (
+                    <div className="grid grid-cols-2 gap-8 border-t border-white/10 pt-8">
+                        {stats.years && (
+                          <div>
+                              <span className={`block text-5xl font-bold text-white mb-2 ${fontSerif}`}>{stats.years}</span>
+                              {labels?.stat1 && <span className="text-xs text-gray-500 uppercase tracking-widest">{labels.stat1}</span>}
+                          </div>
+                        )}
+                        {stats.projects && (
+                          <div>
+                              <span className={`block text-5xl font-bold text-white mb-2 ${fontSerif}`}>{stats.projects}</span>
+                              {labels?.stat2 && <span className="text-xs text-gray-500 uppercase tracking-widest">{labels.stat2}</span>}
+                          </div>
+                        )}
+                    </div>
+                  )}
+
+                  {bio.name && (
+                    <div className="mt-12 font-serif italic text-3xl text-[#FFD700] opacity-80">
+                      {bio.name}
+                    </div>
+                  )}
+              </motion.div>
+           </div>
+        </section>
+      )}
+
+      {/* 3. SERVICES (Si layout global ou spécifié) */}
+      {(!config.layoutType || config.layoutType === 'GALLERY') && services.length > 0 && (
+        <section id="services" className="py-32 bg-[#111]">
+           <div className="max-w-7xl mx-auto px-6">
+              <div className="text-center mb-20">
+                  {labels?.servicesTitle && <h2 className={`text-4xl md:text-5xl font-bold text-white mb-4 ${fontSerif}`}>{labels.servicesTitle}</h2>}
+                  <div className="w-24 h-1 bg-[#FFD700] mx-auto"></div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                 {services.map((item: any, idx: number) => (
+                    <motion.div 
+                      key={idx}
+                      initial={{ opacity: 0, y: 30 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.5, delay: idx * 0.1 }}
+                      className="group bg-[#0d0d0d] border border-white/5 p-8 hover:-translate-y-2 transition-all duration-300 hover:border-[#FFD700]/50 relative overflow-hidden"
+                    >
+                        <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
+                           <Star size={80} />
+                        </div>
+                        
+                        <div className="w-12 h-12 bg-[#FFD700]/10 rounded-full flex items-center justify-center text-[#FFD700] mb-6 group-hover:bg-[#FFD700] group-hover:text-black transition">
+                           <CheckCircle size={24} />
+                        </div>
+
+                        {item.title && <h3 className={`text-2xl font-bold text-white mb-3 ${fontSerif}`}>{item.title}</h3>}
+                        {item.description && <p className="text-gray-400 text-sm leading-relaxed mb-6">{item.description}</p>}
+                        
+                        {item.price && (
+                          <div className="text-[#FFD700] font-bold text-lg">
+                             {item.price}
+                          </div>
+                        )}
+                    </motion.div>
+                 ))}
+              </div>
+           </div>
+        </section>
+      )}
+
+      {/* 4. ZONE CENTRALE DYNAMIQUE (Galerie) */}
+      {(!config.layoutType || config.layoutType === 'GALLERY') && gallery.length > 0 && (
+        <section id="portfolio" className="py-32 px-6 max-w-7xl mx-auto">
+            <div className="flex justify-between items-end mb-16">
+                <div>
+                   {labels?.gallerySubtitle && <h3 className="text-[#FFD700] text-sm font-bold uppercase tracking-widest mb-2">{labels.gallerySubtitle}</h3>}
+                   {labels?.galleryTitle && <h2 className={`text-4xl md:text-5xl font-bold text-white ${fontSerif}`}>{labels.galleryTitle}</h2>}
+                </div>
+            </div>
+
+            <div className="columns-1 md:columns-2 lg:columns-3 gap-8 space-y-8">
+               {gallery.map((img: string, idx: number) => (
+                  <motion.div 
+                    key={idx}
+                    initial={{ opacity: 0 }}
+                    whileInView={{ opacity: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5 }}
+                    className="break-inside-avoid relative group cursor-zoom-in overflow-hidden"
+                    onClick={() => setLightboxImage(img)}
+                  >
+                      <img src={img} className="w-full object-cover grayscale group-hover:grayscale-0 transition duration-700 transform group-hover:scale-105" alt={`Project ${idx}`} />
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                          <span className="text-white uppercase tracking-widest text-xs font-bold border border-white px-4 py-2">Voir</span>
+                      </div>
+                  </motion.div>
+               ))}
+            </div>
+        </section>
+      )}
+
+      {/* Variantes Layouts */}
       {config.layoutType === 'CATALOGUE' && (
-        <CatalogueLegos items={services} phone={contact.actionValue || contact.phone} />
+        <CatalogueLegos items={services} phone={contact.actionValue || contact.phone || phone} labels={labels} />
       )}
 
       {config.layoutType === 'SERVICES' && (
-        <ServicesLegos items={services} phone={contact.actionValue || contact.phone} />
+        <ServicesLegos items={services} phone={contact.actionValue || contact.phone || phone} labels={labels} />
       )}
 
-      <TestimonialsLegos items={sections.find(s => s.type === 'testimonials')?.content?.items || []} />
+      {/* 5. TÉMOIGNAGES */}
+      {testimonials.length > 0 && (
+        <TestimonialsLegos items={testimonials} />
+      )}
 
-      {/* 5. ACTUALITÉS SECTION (Social Wall) */}
-      <section id="news" className="py-32 px-6 max-w-7xl mx-auto border-t border-white/5">
-          <div className="flex items-center gap-4 mb-16">
-              <h2 className={`text-3xl md:text-4xl font-bold text-white ${fontSerif}`}>Actualités</h2>
-              <div className="h-px flex-grow bg-white/10"></div>
-          </div>
+      {/* 6. ACTUALITÉS (Disparaît si aucun post) */}
+      {posts.length > 0 && (
+        <section id="news" className="py-32 px-6 max-w-7xl mx-auto border-t border-white/5">
+            <div className="flex items-center gap-4 mb-16">
+                <h2 className={`text-3xl md:text-4xl font-bold text-white ${fontSerif}`}>{labels?.newsTitle || 'Actualités'}</h2>
+                <div className="h-px flex-grow bg-white/10"></div>
+            </div>
 
-          {posts.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 {posts.map((post) => (
                     <div key={post.id} className="bg-[#111] border border-white/10 p-8 hover:border-[#FFD700]/30 transition duration-300 group relative overflow-hidden">
@@ -583,7 +619,7 @@ const PortfolioPreview: React.FC<PortfolioPreviewProps> = ({ config, phone, crea
                         <div className="flex justify-between items-start mb-6">
                             <Sparkles size={16} className="text-[#FFD700]" />
                             <span className="text-[10px] text-gray-500 font-mono uppercase tracking-widest">
-                                {post.createdAt?.toDate ? new Date(post.createdAt.toDate()).toLocaleDateString() : 'Récemment'}
+                                {post.createdAt?.toDate ? new Date(post.createdAt.toDate()).toLocaleDateString() : ''}
                             </span>
                         </div>
                         
@@ -591,7 +627,6 @@ const PortfolioPreview: React.FC<PortfolioPreviewProps> = ({ config, phone, crea
                             "{post.content}"
                         </p>
 
-                        {/* IMAGE DU POST */}
                         {(post.images?.[0] || post.imageUrl) && (
                             <div className="mt-4 rounded-xl overflow-hidden border border-[#FFD700]/20">
                                 <img 
@@ -604,59 +639,58 @@ const PortfolioPreview: React.FC<PortfolioPreviewProps> = ({ config, phone, crea
                     </div>
                 ))}
             </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-20 border border-dashed border-[#FFD700]/30 rounded-2xl bg-[#FFD700]/5">
-                <div className="mb-4 text-[#FFD700] animate-pulse">⏳</div>
-                <p className="text-gray-400 font-light italic text-sm">L'Empire n'a pas encore publié d'actualités.</p>
-            </div>
-          )}
-      </section>
+        </section>
+      )}
 
-      {/* 6. CONTACT & FOOTER */}
-      <section id="contact" className="bg-[#111] pt-32 pb-10 px-6 border-t border-white/5">
-         <div className="max-w-4xl mx-auto text-center mb-20">
-             <h2 className={`text-4xl md:text-6xl font-bold text-white mb-8 ${fontSerif}`}>Travaillons Ensemble</h2>
-             <p className="text-gray-400 text-lg mb-12 max-w-2xl mx-auto">
-               Vous avez un projet ? Une vision ? Je suis là pour la concrétiser. Contactez-moi dès aujourd'hui.
-             </p>
-             
-             <div className="flex flex-col md:flex-row justify-center gap-6">
-                {phone && (
-                  <>
+      {/* 7. CONTACT & FOOTER (Disparaît s'il n'y a ni titre, ni description, ni téléphone, ni email) */}
+      {(contact.title || contact.description || phone || contact.email) && (
+        <section id="contact" className="bg-[#111] pt-32 pb-10 px-6 border-t border-white/5">
+           <div className="max-w-4xl mx-auto text-center mb-20">
+               {contact.title && <h2 className={`text-4xl md:text-6xl font-bold text-white mb-8 ${fontSerif}`}>{contact.title}</h2>}
+               {contact.description && (
+                 <p className="text-gray-400 text-lg mb-12 max-w-2xl mx-auto">
+                   {contact.description}
+                 </p>
+               )}
+               
+               <div className="flex flex-col md:flex-row justify-center gap-6">
+                  {phone && (
+                    <>
+                      <a 
+                        href={generateWhatsAppLink(phone, hero.title || "vos services", "discuter de")} 
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-8 py-4 bg-[#FFD700] text-black font-bold uppercase tracking-widest hover:bg-white transition duration-300 flex items-center justify-center gap-2"
+                      >
+                        <MessageCircle size={20}/> {labels?.whatsappBtn || 'WhatsApp'}
+                      </a>
+                      <a 
+                        href={`tel:${phone.replace(/\D/g, '')}`} 
+                        className="px-8 py-4 border border-[#FFD700]/30 text-[#FFD700] font-bold uppercase tracking-widest hover:bg-[#FFD700] hover:text-black transition duration-300 flex items-center justify-center gap-2"
+                      >
+                        <Phone size={20}/> {labels?.callBtn || 'Appeler'}
+                      </a>
+                    </>
+                  )}
+                  {contact.email && (
                     <a 
-                      href={generateWhatsAppLink(phone, "votre expertise", "discuter de")} 
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="px-8 py-4 bg-[#FFD700] text-black font-bold uppercase tracking-widest hover:bg-white transition duration-300 flex items-center justify-center gap-2"
+                      href={`mailto:${contact.email}`} 
+                      className="px-8 py-4 border border-white/20 text-white font-bold uppercase tracking-widest hover:bg-white hover:text-black transition duration-300 flex items-center justify-center gap-2"
                     >
-                      <MessageCircle size={20}/> Discuter sur WhatsApp
+                      <Mail size={20}/> {labels?.emailBtn || 'Email'}
                     </a>
-                    <a 
-                      href={`tel:${phone.replace(/\D/g, '')}`} 
-                      className="px-8 py-4 border border-[#FFD700]/30 text-[#FFD700] font-bold uppercase tracking-widest hover:bg-[#FFD700] hover:text-black transition duration-300 flex items-center justify-center gap-2"
-                    >
-                      <Phone size={20}/> Appeler Directement
-                    </a>
-                  </>
-                )}
-                {contact.email && (
-                  <a 
-                    href={`mailto:${contact.email}`} 
-                    className="px-8 py-4 border border-white/20 text-white font-bold uppercase tracking-widest hover:bg-white hover:text-black transition duration-300 flex items-center justify-center gap-2"
-                  >
-                    <Mail size={20}/> Envoyer un Email
-                  </a>
-                )}
-             </div>
-         </div>
+                  )}
+               </div>
+           </div>
 
-         <div className="max-w-7xl mx-auto border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-gray-600">
-            <p>&copy; 2026 {hero.title}. Tous droits réservés.</p>
-            <p className="flex items-center gap-1">
-               Propulsé par <span className="text-[#FFD700] font-bold">Hashtag Digital</span>
-            </p>
-         </div>
-      </section>
+           <div className="max-w-7xl mx-auto border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-gray-600">
+              <p>&copy; 2026 {hero.title}. Tous droits réservés.</p>
+              <p className="flex items-center gap-1">
+                 Propulsé par <span className="text-[#FFD700] font-bold">Hashtag Digital</span>
+              </p>
+           </div>
+        </section>
+      )}
     </div>
   );
 };
