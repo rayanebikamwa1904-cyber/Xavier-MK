@@ -38,29 +38,24 @@ const ArenaCard: React.FC<ArenaCardProps> = ({ provider, onClick, onReviewClick,
 
   const whatsappUrl = flatProvider.phone ? getWhatsAppUrl(flatProvider.phone) : '#';
 
-  const handleShare = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    const shareUrl = `${window.location.origin}/?p=${provider.id}`;
-    const shareData = {
-      title: `Découvrez ${flatProvider.name} sur My Folio-Tag`,
-      text: `Jetez un œil au portfolio de ${flatProvider.name}, un créatif talentueux.`,
-      url: shareUrl,
-    };
-
-    if (navigator.share) {
-      try {
-        await navigator.share(shareData);
-      } catch (error) {
-        console.error('Erreur de partage:', error);
-        // Fallback if user cancels share dialog
-        navigator.clipboard.writeText(shareUrl);
-        alert('Lien du portfolio copié!');
-      }
-    } else {
-      navigator.clipboard.writeText(shareUrl);
-      alert('Lien du portfolio copié dans le presse-papiers!');
-    }
-  };
+const handleShare = async (e) => {
+e.stopPropagation();
+const shareUrl = window.location.origin + '/?p=' + provider.id;
+if (navigator.share) {
+try {
+await navigator.share({ title: provider.name, url: shareUrl });
+} catch (err) {
+if (err.name !== 'AbortError') console.error(err);
+}
+} else {
+try {
+await navigator.clipboard.writeText(shareUrl);
+alert('Lien du portfolio copié !');
+} catch (err) {
+console.error('Erreur de copie', err);
+}
+}
+};
 
   return (
     <div className="group relative w-full bg-white/5 backdrop-blur-2xl border border-white/10 rounded-[2rem] overflow-hidden transition-all duration-500 hover:border-[#FFD700]/50 hover:shadow-[0_0_50px_rgba(255,215,0,0.15)] flex flex-col h-[420px]">
