@@ -25,7 +25,10 @@ const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
       setResetSent(true);
       setError('');
     } catch (error) {
-      setError("Erreur lors de l'envoi de l'email de réinitialisation.");
+      setError("Erreur lors de l'envoi de l'email de réinitialisation. Veuillez vérifier votre adresse email.");
+      console.error("Password reset error:", error);
+    } finally {
+      // If a loading state was used for reset, it would be set to false here.
     }
   };
 
@@ -43,8 +46,16 @@ const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
         onNavigate(AppView.WIZARD);
       }
     } catch (err: any) {
-      console.error(err);
-      setError("Email ou mot de passe incorrect.");
+      console.error("Login error:", err);
+      if (err.code === "auth/invalid-credential" || err.code === "auth/user-not-found") {
+        setError("Email ou mot de passe incorrect. Veuillez réessayer.");
+      } else if (err.code === "auth/wrong-password") {
+        setError("Mot de passe incorrect. Veuillez réessayer.");
+      } else if (err.code === "auth/invalid-email") {
+        setError("Format d'email invalide. Veuillez vérifier votre adresse.");
+      } else {
+        setError("Une erreur inattendue est survenue. Veuillez réessayer plus tard.");
+      }
     } finally {
       setLoading(false);
     }

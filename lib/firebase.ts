@@ -1,21 +1,34 @@
-import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
+import { initializeApp } from 'firebase/app';
+import { getFirestore } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDBpifHGkpr7ev4y3SqsxlXS_lLZ2UnzpM",
-  authDomain: "myfolio-tag.firebaseapp.com",
-  projectId: "myfolio-tag",
-  storageBucket: "myfolio-tag.firebasestorage.app",
-  messagingSenderId: "360310061063",
-  appId: "1:360310061063:web:ca662aa6e0dc89cfd6d2a2"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-// Initialisation de l'application Firebase
-const app = initializeApp(firebaseConfig);
+console.log("Firebase Config:", firebaseConfig);
 
-// Exportation des services pour l'application
-export const auth = getAuth(app);
-export const db = getFirestore(app);
-export const storage = getStorage(app);
+let app: any;
+let db: any;
+let auth: any;
+let firebaseInitializationError: Error | null = null;
+
+try {
+  app = initializeApp(firebaseConfig);
+  db = getFirestore(app);
+  auth = getAuth(app);
+} catch (error: any) {
+  console.error("Firebase initialization failed:", error);
+  firebaseInitializationError = error;
+  // Export null or dummy objects to prevent crashes in dependent modules
+  app = null;
+  db = null;
+  auth = null;
+}
+
+export { db, auth, firebaseInitializationError };

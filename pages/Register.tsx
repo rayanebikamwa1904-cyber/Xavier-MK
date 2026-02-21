@@ -65,11 +65,15 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onNavigate }) => {
       onNavigate(AppView.WIZARD);
 
     } catch (err: any) {
-      console.error(err);
+      console.error("Registration error:", err);
       if (err.code === 'auth/email-already-in-use') {
-        setError("Cet email est déjà utilisé par un autre membre de l'élite.");
+        setError("Cet email est déjà utilisé par un autre compte. Veuillez vous connecter ou utiliser un autre email.");
+      } else if (err.code === 'auth/invalid-email') {
+        setError("L'adresse email est mal formatée. Veuillez vérifier votre saisie.");
+      } else if (err.code === 'auth/weak-password') {
+        setError("Le mot de passe est trop faible. Il doit contenir au moins 6 caractères.");
       } else {
-        setError(err.message || "Erreur lors de l'inscription. Vérifiez votre connexion.");
+        setError("Une erreur est survenue lors de l'inscription. Veuillez vérifier votre connexion et réessayer.");
       }
     } finally {
       setLoading(false);

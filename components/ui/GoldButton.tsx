@@ -1,22 +1,15 @@
 import React from 'react';
 
-interface GoldButtonProps {
+interface GoldButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   children: React.ReactNode;
-  onClick?: () => void;
   className?: string;
 }
 
-const GoldButton: React.FC<GoldButtonProps> = ({ children, onClick, className = "" }) => {
+const GoldButton: React.FC<GoldButtonProps> = ({ children, className = '', ...props }) => {
   return (
-    <button 
-      onClick={onClick}
-      className={`
-        relative px-8 py-3 rounded-full font-bold text-black
-        bg-gold-shine bg-[length:200%_auto] hover:bg-right transition-all duration-500
-        shadow-glow hover:shadow-[0_0_25px_rgba(250,204,21,0.7)]
-        transform hover:-translate-y-1
-        ${className}
-      `}
+    <button
+      className={`bg-gold-500 hover:bg-gold-600 text-black font-bold py-3 px-8 rounded-full transition duration-300 shadow-lg hover:shadow-glow ${className}`}
+      {...props}
     >
       {children}
     </button>

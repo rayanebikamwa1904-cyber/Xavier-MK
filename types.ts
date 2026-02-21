@@ -63,6 +63,7 @@ export enum AppView {
   LOGIN = 'LOGIN',
   ADMIN = 'ADMIN',
   TERMS = 'TERMS',
+  PROFILE = 'PROFILE',
 }
 
 export interface Testimonial {

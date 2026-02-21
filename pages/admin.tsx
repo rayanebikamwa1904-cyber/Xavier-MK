@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { db, auth } from '../lib/firebase';
-import { collection, getDocs, query, doc, updateDoc, deleteDoc, onSnapshot, setDoc, getDoc } from 'firebase/firestore';
+import { collection, getDocs, query, doc, updateDoc, deleteDoc, onSnapshot, setDoc } from 'firebase/firestore';
 import { signOut } from 'firebase/auth';
 import { 
   Users, DollarSign, Activity, Search, ShieldCheck, 
@@ -74,7 +74,7 @@ export default function AdminDashboard({ onNavigate }: AdminProps) {
           ...doc.data()
         }));
 
-        const pending = usersList.filter((u: any) => u.paymentStatus === 'pending_verification').length;
+        const pending = usersList.filter(u => u.paymentStatus === 'pending_verification').length;
         setPendingApprovals(pending);
 
         // Trier par date de création (récent en haut)

@@ -7,7 +7,7 @@ import {
   Phone, Mail, MessageCircle, MapPin, ShieldCheck, Star, ArrowRight, 
   Instagram, Facebook, Linkedin, X, Map, Clock, Award, GraduationCap, 
   ShoppingBag, Menu, X as CloseIcon, ChevronRight, ChevronLeft, ArrowLeft,
-  CheckCircle, Sparkles, ShoppingCart, Calendar, UserPlus
+  CheckCircle, Sparkles, ShoppingCart, Calendar, UserPlus, Ban
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import vCard from 'vcf';

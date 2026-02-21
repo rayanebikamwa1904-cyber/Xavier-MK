@@ -30,19 +30,16 @@ const App: React.FC = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  // --- LIVE SYNC AVEC L'ARÈNE + DÉTECTION LIEN DIRECT ---
+  // --- LIVE SYNC AVEC L'ARÈNE (FIREBASE ONLY - NO MOCKS) ---
   useEffect(() => {
-    // 1. Détection de l'ID dans l'URL (ex: ?p=ID_DU_GARS)
-    const params = new URLSearchParams(window.location.search);
-    const profileId = params.get('p');
-
+    // Écoute STRICTE : Uniquement les status="active"
     const q = query(collection(db, "users"), where("status", "==", "active"));
     
     const unsubscribe = onSnapshot(q, (snapshot) => {
         const liveCreators = snapshot.docs.map(doc => {
             const data = doc.data();
             
-            // Reconstitution du Portfolio Config (TA LOGIQUE INTACTE)
+            // Reconstitution du Portfolio Config
             const sections = [
                 {
                     type: 'hero',
@@ -80,7 +77,7 @@ const App: React.FC = () => {
                 {
                     type: 'contact',
                     content: {
-                        address: data.location?.address || "Kinshasa",
+                        address: "Kinshasa, Gombe",
                         actionValue: data.whatsapp,
                         phone: data.phone,
                         email: data.email
@@ -95,9 +92,15 @@ const App: React.FC = () => {
                 }
             ];
 
+            // LOGIQUE DE TRI "LIVE" ROBUSTE
             let sortTimestamp = new Date().toISOString();
-            if (data.activatedAt?.toDate) {
-                sortTimestamp = data.activatedAt.toDate().toISOString();
+            
+            if (data.activatedAt) {
+                if (typeof data.activatedAt.toDate === 'function') {
+                    sortTimestamp = data.activatedAt.toDate().toISOString();
+                } else {
+                    sortTimestamp = String(data.activatedAt);
+                }
             } else if (data.createdAt?.toDate) {
                 sortTimestamp = data.createdAt.toDate().toISOString();
             }
@@ -122,23 +125,16 @@ const App: React.FC = () => {
             } as CreatorProfile;
         });
         
+        // TRI LIVE : Les plus récents en haut
         liveCreators.sort((a, b) => new Date(b.joinedAt).getTime() - new Date(a.joinedAt).getTime());
-        setCreators(liveCreators);
 
-        // 2. LOGIQUE CHIRURGICALE : Si l'ID est dans l'URL, on ouvre le portfolio direct
-        if (profileId) {
-            const target = liveCreators.find(c => c.id === profileId);
-            if (target) {
-                setSelectedCreator(target);
-                setView(AppView.ARENA);
-            }
-        }
+        // MISE À JOUR D'ÉTAT (ZÉRO MOCK)
+        setCreators(liveCreators);
     });
 
     return () => unsubscribe();
   }, []);
 
-  // --- LE RESTE DE TON CODE (CGU, WIZARD, LANDING...) ---
   useEffect(() => {
     const unsub = onSnapshot(doc(db, "platform", "settings"), (docSnap) => {
       if (docSnap.exists()) {
@@ -148,17 +144,30 @@ const App: React.FC = () => {
     return () => unsub();
   }, []);
 
+  // --- URL PARAMETER DETECTION --- 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const creatorIdFromUrl = params.get('p');
+
+    if (creatorIdFromUrl && creators.length > 0) {
+      const creator = creators.find(c => c.id === creatorIdFromUrl);
+      if (creator) {
+        setSelectedCreator(creator);
+        setView(AppView.ARENA);
+      }
+    }
+  }, [creators]); // Re-run when creators data is loaded
+
   const handlePublish = (newProfile: CreatorProfile) => {
+    // Optimistic update pour l'expérience utilisateur immédiate
     setCreators(prev => [newProfile, ...prev]);
     setView(AppView.ARENA);
   };
 
-  if (loading) return <SplashScreen />;
-
-  // Ta section Landing (Header, Hero, Preview)
   const Landing = () => (
     <div className="min-h-screen bg-majestic-gradient text-white font-sans selection:bg-gold-500 selection:text-black">
       <SEO />
+      {/* --- HEADER --- */}
       <nav className="fixed w-full z-50 p-4">
         <GlassCard className="max-w-7xl mx-auto px-6 py-3 flex justify-between items-center !rounded-full">
           <div className="text-2xl font-bold tracking-tighter flex items-center gap-2 cursor-pointer" onClick={() => setView(AppView.LANDING)}>
@@ -167,6 +176,7 @@ const App: React.FC = () => {
           </div>
           <div className="hidden md:flex gap-6 text-sm font-medium text-gray-300">
             <button onClick={() => setView(AppView.ARENA)} className="hover:text-gold-400 transition">L'Arène</button>
+            <button onClick={() => setView(AppView.ARENA)} className="hover:text-gold-400 transition">Prestataires</button>
             <button onClick={() => setView(AppView.WIZARD)} className="hover:text-gold-400 transition">Créer</button>
             <button onClick={() => setView(AppView.TERMS)} className="hover:text-gold-400 transition">CGU</button>
           </div>
@@ -176,16 +186,20 @@ const App: React.FC = () => {
         </GlassCard>
       </nav>
 
+      {/* --- HERO SECTION --- */}
       <section className="relative pt-40 pb-20 px-4 text-center overflow-hidden">
         <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-gold-500/20 blur-[120px] rounded-full pointer-events-none"></div>
+
         <h1 className="text-5xl md:text-7xl font-bold mb-6 tracking-tight">
           L'Élite des Créatifs <br />
           <span className="text-transparent bg-clip-text bg-gold-shine">Congolais</span>
         </h1>
+        
         <p className="text-xl text-gray-400 max-w-2xl mx-auto mb-10">
           Rejoignez l'Arène. Créez votre portfolio vitrine, soyez noté, et gagnez la confiance de vos clients.
         </p>
 
+        {/* Barre de Recherche Glassmorphism */}
         <div className="max-w-xl mx-auto relative group z-10">
             <div className="absolute -inset-1 bg-gradient-to-r from-gold-600 to-white/20 rounded-full blur opacity-25 group-hover:opacity-75 transition duration-1000"></div>
             <div className="relative flex bg-black/50 backdrop-blur-xl border border-white/10 rounded-full p-2">
@@ -196,23 +210,41 @@ const App: React.FC = () => {
                   className="w-full bg-transparent text-white px-4 py-2 focus:outline-none placeholder-gray-500"
                   onKeyDown={(e) => e.key === 'Enter' && setView(AppView.ARENA)}
                 />
-                <button onClick={() => setView(AppView.ARENA)} className="bg-white/10 hover:bg-white/20 text-white p-3 rounded-full transition">
+                <button 
+                  onClick={() => setView(AppView.ARENA)}
+                  className="bg-white/10 hover:bg-white/20 text-white p-3 rounded-full transition"
+                >
                     <Sparkles className="w-5 h-5 text-gold-400" />
                 </button>
             </div>
         </div>
       </section>
 
+      {/* --- LIVE PREVIEW ARÈNE (SAMPLES) --- */}
       <section className="max-w-7xl mx-auto px-4 py-20">
         <h2 className="text-3xl font-bold mb-10 text-center">Les Stars de l'Arène <span className="text-gold-400">✦</span></h2>
+        
         {creators.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 {creators.slice(0, 3).map((creator) => (
-                  <GlassCard key={creator.id} onClick={() => { setSelectedCreator(creator); setView(AppView.ARENA); }} className="p-0 hover:scale-[1.02] transition duration-300 group cursor-pointer">
+                  <GlassCard 
+                    key={creator.id}
+                    onClick={() => {
+                      setSelectedCreator(creator);
+                      setView(AppView.ARENA);
+                    }}
+                    className="p-0 hover:scale-[1.02] transition duration-300 group cursor-pointer"
+                  >
                       <div className="h-48 bg-gray-800 relative">
-                          <img src={creator.portfolio.sections[0].content.backgroundImage} alt={creator.name} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition duration-500"/>
+                          <img 
+                            src={creator.portfolio.sections[0].content.backgroundImage} 
+                            alt={creator.name}
+                            className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition duration-500"
+                          />
                           <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
-                          <span className="absolute top-4 right-4 bg-black/50 backdrop-blur border border-gold-500/30 text-gold-400 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">★ {creator.rating}</span>
+                          <span className="absolute top-4 right-4 bg-black/50 backdrop-blur border border-gold-500/30 text-gold-400 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+                              ★ {creator.rating}
+                          </span>
                       </div>
                       <div className="p-6">
                           <h3 className="text-xl font-bold mb-1 group-hover:text-gold-400 transition">{creator.name}</h3>
@@ -224,38 +256,61 @@ const App: React.FC = () => {
         ) : (
             <div className="text-center py-20 px-6 bg-white/5 rounded-[3rem] border border-dashed border-white/10 text-gray-500">
                 <p className="mb-4 text-lg">L'Arène attend ses premiers champions.</p>
-                <GoldButton className="text-sm px-6 py-2" onClick={() => setView(AppView.WIZARD)}>Devenir le Premier</GoldButton>
+                <GoldButton className="text-sm px-6 py-2" onClick={() => setView(AppView.WIZARD)}>
+                    Devenir le Premier
+                </GoldButton>
             </div>
         )}
       </section>
     </div>
   );
 
-  if (view === AppView.LANDING) return <Landing />;
-  if (view === AppView.WIZARD) return <Wizard platformPrice={platformPrice} onBack={() => setView(AppView.LANDING)} onPublish={handlePublish} onAuthRedirect={() => setView(AppView.REGISTER)} onNavigate={setView} />;
-  if (view === AppView.REGISTER) return <RegisterPage onNavigate={setView} />;
-  if (view === AppView.LOGIN) return <LoginPage onNavigate={setView} />;
-  if (view === AppView.ADMIN) return <AdminDashboard onNavigate={setView} />;
-  if (view === AppView.TERMS) return <TermsPage onNavigate={setView} />;
-
-  if (view === AppView.ARENA) {
-    if (selectedCreator) {
+  const renderView = () => {
+    if (view === AppView.LANDING) return <Landing />;
+    if (view === AppView.WIZARD) return (
+      <Wizard 
+        platformPrice={platformPrice}
+        onBack={() => setView(AppView.LANDING)} 
+        onPublish={handlePublish} 
+        onAuthRedirect={() => setView(AppView.REGISTER)}
+        onNavigate={setView}
+      />
+    );
+    if (view === AppView.REGISTER) return <RegisterPage onNavigate={setView} />;
+    if (view === AppView.LOGIN) return <LoginPage onNavigate={setView} />;
+    if (view === AppView.ADMIN) return <AdminDashboard onNavigate={setView} />;
+    if (view === AppView.TERMS) return <TermsPage onNavigate={setView} />;
+    if (view === AppView.ARENA) {
+      if (selectedCreator) {
+        return (
+          <div className="min-h-screen bg-black relative">
+            <PortfolioPreview 
+              config={selectedCreator.portfolio} 
+              phone={selectedCreator.phone}
+              creatorId={selectedCreator.id}
+              expiryDate={selectedCreator.expiryDate}
+              onBack={() => setSelectedCreator(null)}
+            />
+          </div>
+        );
+      }
       return (
-        <div className="min-h-screen bg-black relative">
-          <PortfolioPreview 
-            config={selectedCreator.portfolio} 
-            phone={selectedCreator.phone}
-            creatorId={selectedCreator.id}
-            expiryDate={selectedCreator.expiryDate}
-            onBack={() => setSelectedCreator(null)}
-          />
-        </div>
+         <ArenaPage creators={creators} onSelectCreator={setSelectedCreator} onNavigate={setView} />
       );
     }
-    return <ArenaPage creators={creators} onSelectCreator={setSelectedCreator} onNavigate={setView} />;
+    return <div className="min-h-screen bg-black flex items-center justify-center text-[#FFD700]">Loading Empire...</div>;
+  };
+
+  if (loading) {
+    return <SplashScreen />;
   }
 
-  return <div className="min-h-screen bg-black flex items-center justify-center text-[#FFD700]">Loading Empire...</div>;
+  return (
+    <div className="bg-black text-white min-h-screen">
+      {renderView()}
+    </div>
+  );
+
 };
 
-export default App 
+export default App;
