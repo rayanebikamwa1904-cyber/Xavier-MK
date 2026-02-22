@@ -1152,15 +1152,15 @@ export default function Wizard({ onNavigate, platformPrice }: WizardProps) {
                                     <input 
                                         type="text" 
                                         readOnly
-                                        value={userData?.isPaid ? `https://myfoliotag.com/${userData?.portfolioSlug}` : `https://myfoliotag.com/${userData?.portfolioSlug?.slice(0,3)}*******`}
+                                        value={userData?.isPaid && user?.uid ? `${window.location.origin}/?p=${user?.uid}` : `https://myfoliotag.com/${userData?.portfolioSlug?.slice(0,3)}*******`}
                                         className={`w-full bg-[#111] border border-white/10 rounded-lg py-3 px-4 text-xs outline-none font-mono ${!userData?.isPaid ? 'text-gray-600' : 'text-[#FFD700]'}`}
                                     />
                                     {!userData?.isPaid && <Lock size={12} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600"/>}
                                 </div>
                                 <button 
                                     onClick={() => {
-                                        if(userData?.isPaid) {
-                                            navigator.clipboard.writeText(`https://myfoliotag.com/${userData?.portfolioSlug}`);
+                                        if(userData?.isPaid && user?.uid) {
+                                            navigator.clipboard.writeText(`${window.location.origin}/?p=${user?.uid}`);
                                             setLinkCopied(true);
                                             setTimeout(() => setLinkCopied(false), 2000);
                                         }
@@ -1177,11 +1177,12 @@ export default function Wizard({ onNavigate, platformPrice }: WizardProps) {
                         {/* SLOT 1 : QR CODE */}
                         <div className="relative group">
                             <div className={`bg-[#111] border border-white/10 rounded-xl p-6 flex flex-col items-center text-center transition-all ${!userData?.isPaid ? 'blur-sm opacity-50 select-none pointer-events-none' : ''}`}>
-                                <div className="bg-white p-2 rounded-lg mb-4">
+                                <div className="bg-white p-3 rounded-xl mb-4">
                                     <QRCodeCanvas 
-                                        value={`https://myfoliotag.com/${userData?.portfolioSlug}`} 
+                                        value={userData?.isPaid && user?.uid ? `${window.location.origin}/?p=${user?.uid}` : `https://myfoliotag.com/${userData?.portfolioSlug}`}
                                         size={128}
-                                        level={"H"}
+                                        level={"Q"}
+                                        includeMargin={true}
                                         ref={qrRef}
                                     />
                                 </div>
