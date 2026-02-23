@@ -9,15 +9,15 @@ import { collection, addDoc, query, where, getDocs, orderBy, serverTimestamp, on
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 
 interface ArenaProps {
-  creators: CreatorProfile[];
   onSelectCreator: (creator: CreatorProfile) => void;
   onNavigate: (view: AppView) => void;
 }
 
 const CATEGORIES = ["Tout", "Décoration", "Photographe", "DJ / Son", "Maquillage", "Traiteur", "Salle"];
 
-export default function ArenaPage({ creators, onSelectCreator, onNavigate }: ArenaProps) {
+export default function ArenaPage({ onSelectCreator, onNavigate }: ArenaProps) {
   const { user } = useAuth();
+  const [creators, setCreators] = useState<CreatorProfile[]>([]);
   const [activeCategory, setActiveCategory] = useState("Tout");
   const [activeCity, setActiveCity] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -40,6 +40,21 @@ export default function ArenaPage({ creators, onSelectCreator, onNavigate }: Are
   // Content Modal State
   const [contentModalOpen, setContentModalOpen] = useState(false);
   const [contentModalType, setContentModalType] = useState<'about' | 'pricing' | 'partner' | 'privacy' | 'terms' | 'legal' | null>(null);
+
+  // Fetch Creators in Real-time
+  useEffect(() => {
+    const q = query(collection(db, "users"), where("status", "==", "active"), orderBy("publishedAt", "desc"));
+    
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const fetchedCreators: CreatorProfile[] = [];
+      querySnapshot.forEach((doc) => {
+        fetchedCreators.push({ id: doc.id, ...doc.data() } as CreatorProfile);
+      });
+      setCreators(fetchedCreators);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   // Fetch Reviews when modal opens
   useEffect(() => {
@@ -115,9 +130,10 @@ export default function ArenaPage({ creators, onSelectCreator, onNavigate }: Are
   };
 
   // Filter & Sort Logic
-  const filteredProviders = creators.filter(p => {
+  const validCreators = creators.filter(p => p && p.id && p.portfolio && Array.isArray(p.portfolio.sections));
+  const filteredProviders = validCreators.filter(p => {
     // 1. Category Filter
-    const pCat = (p.category || "").toLowerCase();
+    const pCat = (p?.category || "").toLowerCase();
     const activeCat = activeCategory.toLowerCase();
     const matchesCat = 
         activeCategory === "Tout" || 
@@ -128,18 +144,18 @@ export default function ArenaPage({ creators, onSelectCreator, onNavigate }: Are
     const query = searchQuery.toLowerCase();
     const matchesSearch = 
         !query ||
-        p.name.toLowerCase().includes(query) || 
+        (p?.name || "").toLowerCase().includes(query) || 
         pCat.includes(query) ||
-        (p.portfolio.sections[0].content.title || "").toLowerCase().includes(query);
+        (p?.portfolio?.sections?.[0]?.content?.title || "").toLowerCase().includes(query);
 
     // 3. City Filter
-    const pAddress = p.portfolio.sections.find(s => s.type === 'contact')?.content.address || "";
-    const pCity = p.location?.commune || "";
+    const pAddress = p?.portfolio?.sections?.find(s => s.type === 'contact')?.content?.address || "";
+    const pCity = p?.location?.commune || "";
     const matchesCity = !activeCity || 
                         pAddress.toLowerCase().includes(activeCity.toLowerCase()) ||
                         pCity.toLowerCase().includes(activeCity.toLowerCase());
 
-    const matchesTag = !activeTag || (p.tags || []).includes(activeTag);
+    const matchesTag = !activeTag || (p?.tags || []).includes(activeTag);
 
     return matchesCat && matchesSearch && matchesCity && matchesTag;
   }).sort((a, b) => {
@@ -369,7 +385,7 @@ export default function ArenaPage({ creators, onSelectCreator, onNavigate }: Are
                   <div className="p-8 bg-gradient-to-b from-[#1a1a1a] to-[#111] border-b border-white/5 text-center">
                       <div className="w-20 h-20 mx-auto rounded-full p-1 bg-gradient-to-r from-[#FFD700] to-[#FDB931] mb-4 shadow-[0_0_20px_rgba(255,215,0,0.2)]">
                           <img 
-                            src={selectedReviewProfile.portfolio.sections.find(s => s.type === 'bio')?.content.image || "https://via.placeholder.com/100"} 
+                            src={selectedReviewProfile?.portfolio?.sections?.find(s => s.type === 'bio')?.content?.image || "https://via.placeholder.com/100"} 
                             className="w-full h-full rounded-full object-cover border-4 border-black"
                           />
                       </div>

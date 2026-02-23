@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { db, auth } from '../lib/firebase';
-import { collection, getDocs, query, doc, updateDoc, deleteDoc, onSnapshot, setDoc } from 'firebase/firestore';
+import { collection, getDocs, query, doc, updateDoc, deleteDoc, onSnapshot, setDoc, getDoc } from 'firebase/firestore';
 import { signOut } from 'firebase/auth';
 import { 
   Users, DollarSign, Activity, Search, ShieldCheck, 
   CheckCircle, Gift, Ban, Eye, Download, LogOut,
   Trash2, XCircle, BadgeCheck, MessageCircle, Clock,
-  Crown, Megaphone, ToggleLeft, ToggleRight, Link as LinkIcon, Calendar, Bell
+  Crown, Megaphone, ToggleLeft, ToggleRight, Link as LinkIcon, Calendar, Bell, UserCheck
 } from 'lucide-react';
 
 import { AppView } from '../types';
@@ -17,7 +17,7 @@ interface AdminProps {
 }
 
 export default function AdminDashboard({ onNavigate }: AdminProps) {
-  const { user, loading } = useAuth();
+  const { user, loading, impersonateUser } = useAuth();
   
   // --- ÉTATS ---
   const [realUsers, setRealUsers] = useState<any[]>([]);
@@ -69,7 +69,7 @@ export default function AdminDashboard({ onNavigate }: AdminProps) {
         const q = query(collection(db, "users"));
         const querySnapshot = await getDocs(q);
         
-        const usersList = querySnapshot.docs.map(doc => ({
+        const usersList: any[] = querySnapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
         }));
@@ -121,36 +121,35 @@ export default function AdminDashboard({ onNavigate }: AdminProps) {
   const handleActivate = async (userId: string) => {
     if (!userId) return;
     try {
-      const userRef = doc(db, "users", userId);
-      await updateDoc(userRef, {
+      await updateDoc(doc(db, 'users', userId), { 
         status: "active",
         isPaid: true,
         activatedAt: new Date().toISOString()
       });
-      alert("Empire ACTIVÉ ! 🚀");
-      fetchUsers();
-    } catch (error) {
-      console.error("Erreur:", error);
+      window.location.reload();
+    } catch (e: any) {
+      alert("Erreur : " + e.message);
     }
   };
 
   // 2. DÉSACTIVER (FORCE)
   const handleDeactivate = async (userId: string) => {
-     if (!userId) return;
-     if(!confirm("RETIRER cet Empire de l'Arène ?")) return;
-     try {
-        const userRef = doc(db, "users", userId);
-        await updateDoc(userRef, { status: "inactive" });
-        // UI update locale pour feedback immédiat
-        setRealUsers(prev => prev.map(u => u.id === userId ? {...u, status: 'inactive'} : u));
-        alert("Empire DÉSACTIVÉ. 🛡️");
-     } catch (error) {
-        console.error("Erreur:", error);
-     }
+    if (!userId) return;
+    if (!confirm("RETIRER cet Empire de l'Arène ?")) return;
+    try {
+      await updateDoc(doc(db, 'users', userId), { isActive: false, status: 'blocked' });
+      window.location.reload();
+    } catch (e: any) {
+      alert("Erreur : " + e.message);
+    }
   };
 
   // 3. BADGE / CERTIFICATION (FORCE)
   const handleBadge = async (userId: string, type: 'gold' | 'blue') => {
+      if (!userId) {
+          alert("Erreur d'exécution : userId est indéfini.");
+          return;
+      }
       if(!confirm(`Attribuer le Badge ${type === 'gold' ? 'VIP OR' : 'VÉRIFIÉ BLEU'} ?`)) return;
       try {
         const userRef = doc(db, "users", userId);
@@ -159,15 +158,18 @@ export default function AdminDashboard({ onNavigate }: AdminProps) {
             badgeType: type,
             plan: type === 'gold' ? 'vip' : 'premium' 
         });
-        alert(`Badge ${type.toUpperCase()} attribué !`);
-        fetchUsers();
-      } catch (error) {
+        window.location.reload();
+      } catch (error: any) {
         console.error("Erreur:", error);
+        alert("Erreur d'exécution : " + error.message);
       }
   };
 
   const handleExtendAccess = async (userId: string, days: number) => {
-    if (!userId) return;
+    if (!userId) {
+        alert("Erreur d'exécution : userId est indéfini.");
+        return;
+    }
     try {
       const userRef = doc(db, "users", userId);
       const userDoc = await getDoc(userRef);
@@ -178,37 +180,45 @@ export default function AdminDashboard({ onNavigate }: AdminProps) {
         await updateDoc(userRef, {
           expiryDate: newExpiry.toISOString(),
         });
-        alert(`Accès prolongé de ${days} jours !`);
-        fetchUsers();
+        window.location.reload();
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erreur:", error);
+      alert("Erreur d'exécution : " + error.message);
     }
   };
 
   const handleToggleVerification = async (userId: string, currentStatus: boolean) => {
-    if (!userId) return;
+    if (!userId) {
+        alert("Erreur d'exécution : userId est indéfini.");
+        return;
+    }
     try {
       const userRef = doc(db, "users", userId);
       await updateDoc(userRef, {
         isVerified: !currentStatus,
       });
-      alert(`Badge de vérification ${!currentStatus ? 'activé' : 'désactivé'} !`);
-      fetchUsers();
-    } catch (error) {
+      window.location.reload();
+    } catch (error: any) {
       console.error("Erreur:", error);
+      alert("Erreur d'exécution : " + error.message);
     }
   };
   const handleSetFeatured = async (userId: string) => {
+    if (!userId) {
+        alert("Erreur d'exécution : userId est indéfini.");
+        return;
+    }
     if(!confirm("Élire cet utilisateur comme TOP PRESTATAIRE de l'Arène ?")) return;
     try {
       await setDoc(doc(db, "platform", "settings"), {
         ...platformSettings,
         featuredProviderId: userId
       }, { merge: true });
-      alert("Nouveau TOP PRESTATAIRE élu ! 👑");
-    } catch (error) {
+      window.location.reload();
+    } catch (error: any) {
       console.error("Erreur:", error);
+      alert("Erreur d'exécution : " + error.message);
     }
   };
 
@@ -219,26 +229,48 @@ export default function AdminDashboard({ onNavigate }: AdminProps) {
         ...platformSettings,
         ...updates
       }, { merge: true });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erreur settings:", error);
+      alert("Erreur d'exécution : " + error.message);
     }
   };
 
   // 4. SUPPRESSION DÉFINITIVE (PURGE)
   const handleDeleteUser = async (userId: string) => {
+      if (!userId) {
+          alert("Erreur d'exécution : userId est indéfini.");
+          return;
+      }
       if(!confirm("⚠️ PURGE TOTALE : Cette action est irréversible. Supprimer ?")) return;
       try {
-          await deleteDoc(doc(db, "users", userId));
-          setRealUsers(prev => prev.filter(u => u.id !== userId)); // UI Update immédiate
-          alert("Utilisateur PURGÉ de la base de données.");
-      } catch (error) {
+          const userRef = doc(db, "users", userId);
+          await deleteDoc(userRef);
+          // UI Update immédiate (SEULEMENT APRÈS SUCCÈS)
+          window.location.reload();
+      } catch (error: any) {
           console.error("Erreur suppression:", error);
+          alert("Erreur d'exécution : " + error.message);
       }
   };
 
   const handleSpy = (slug: string) => {
     if(slug) window.open(`/p/${slug}`, '_blank');
     else alert("Portfolio non généré.");
+  };
+
+  const handleGodMode = (userId: string) => {
+    if (!userId) {
+        alert("Erreur d'exécution : userId est indéfini.");
+        return;
+    }
+    if(!confirm(`GOD MODE : Se connecter en tant que cet utilisateur ?`)) return;
+    try {
+        impersonateUser(userId);
+        onNavigate(AppView.WIZARD);
+    } catch (error: any) {
+        console.error("Erreur God Mode:", error);
+        alert("Erreur d'exécution : " + error.message);
+    }
   };
 
   const formatWhatsAppNumber = (phone: string) => {
@@ -324,6 +356,40 @@ export default function AdminDashboard({ onNavigate }: AdminProps) {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-8">
+<div className="mb-10 p-8 bg-black border-2 border-gold-500/30 rounded-2xl shadow-2xl relative overflow-hidden group">
+  <div className="absolute top-0 left-0 w-1 h-full bg-gold-500"></div>
+  <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+    <div className="text-left">
+      <h3 className="text-gold-500 font-bold text-xl tracking-widest uppercase">Console de Commandement</h3>
+      <p className="text-gray-400 text-sm">Entrez l'identifiant pour suspendre ou bannir un accès instantanément.</p>
+    </div>
+    
+    <div className="flex flex-1 max-w-2xl w-full gap-3">
+      <input 
+        id="king-target-id"
+        type="text" 
+        placeholder="Coller l'ID du prestataire ici..." 
+        className="flex-1 bg-white/5 border border-white/10 rounded-lg px-6 py-4 text-white font-mono focus:border-gold-500 outline-none transition-all"
+      />
+      <button 
+        onClick={async () => {
+          const id = (document.getElementById('king-target-id') as HTMLInputElement).value;
+          if(!id) return;
+          try {
+            await updateDoc(doc(db, 'users', id.trim()), { isActive: false, status: 'blocked' });
+            window.location.reload();
+          } catch(e: any) {
+            alert("Erreur : " + e.message);
+          }
+        }}
+        className="bg-gold-500 hover:bg-gold-600 text-black font-black px-8 py-4 rounded-lg uppercase tracking-tighter transition-transform active:scale-95"
+      >
+        Suspendre l'accès
+      </button>
+    </div>
+  </div>
+</div>
+
         
         {/* KPIs */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
@@ -418,6 +484,7 @@ export default function AdminDashboard({ onNavigate }: AdminProps) {
                             <th className="p-4">Statut</th>
                             <th className="p-4">CRM / Actions</th>
                             <th className="p-4">Badges & Purge</th>
+                            <th className="p-4">Contrôle</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-white/5">
@@ -434,6 +501,7 @@ export default function AdminDashboard({ onNavigate }: AdminProps) {
                                                 {u.isVerified && <BadgeCheck size={14} className={u.badgeType === 'gold' ? 'text-gold-500' : 'text-blue-500'} fill="currentColor" color="black"/>}
                                             </div>
                                             <div className="text-[10px] text-gray-500">{u.email}</div>
+                                            <p className="text-[10px] text-yellow-500 font-mono select-all cursor-pointer" title="Copier l'ID">{u.id}</p>
                                         </div>
                                     </div>
                                 </td>
@@ -525,10 +593,41 @@ export default function AdminDashboard({ onNavigate }: AdminProps) {
                                         <button onClick={(e) => { e.stopPropagation(); handleSpy(u.portfolioSlug); }} className="relative z-50 pointer-events-auto p-2 rounded-lg bg-white/5 text-gray-400 hover:text-white transition" title="Voir">
                                             <Eye size={16}/>
                                         </button>
+
                                         <button onClick={(e) => { e.stopPropagation(); handleDeleteUser(u.id); }} className="relative z-50 pointer-events-auto p-2 rounded-lg bg-red-900/20 text-red-500 border border-red-900/50 hover:bg-red-600 hover:text-white transition" title="PURGER">
                                             <Trash2 size={16}/>
                                         </button>
                                     </div>
+                                </td>
+                                <td className="p-4">
+                                    <button 
+                                        onClick={(e) => { e.stopPropagation(); handleGodMode(u.id); }}
+                                        className="relative z-50 pointer-events-auto flex items-center gap-2 text-xs font-bold bg-white/10 text-white px-3 py-1.5 rounded-lg hover:bg-white/20 transition"
+                                    >
+                                        <UserCheck size={14}/> GOD MODE
+                                    </button>
+                                    <button 
+                                        onClick={async (e) => { 
+                                            e.stopPropagation();
+                                            if (!window.confirm("ACCORDER L'ACCÈS VIP À VIE (IRRÉVERSIBLE) ?")) return;
+                                            try {
+                                                await updateDoc(doc(db, 'users', u.id), {
+                                                    isPaid: true,
+                                                    status: 'active',
+                                                    plan: 'vip',
+                                                    badgeType: 'gold',
+                                                    isVerified: true,
+                                                    expiryDate: '9999-12-31T23:59:59.999Z'
+                                                });
+                                                window.location.reload();
+                                            } catch (error: any) {
+                                                alert('ERREUR : ' + error.message);
+                                            }
+                                        }}
+                                        className="relative z-50 pointer-events-auto flex items-center gap-2 text-xs font-bold bg-gold-500 text-black px-3 py-1.5 rounded-lg hover:bg-gold-400 transition shadow-lg shadow-gold-900/20"
+                                    >
+                                        <Crown size={14}/> VIP VITAL
+                                    </button>
                                 </td>
                             </tr>
                         ))}

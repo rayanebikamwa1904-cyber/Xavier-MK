@@ -2,13 +2,22 @@ import React from 'react';
 import { Star } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Testimonial } from '../types';
+import { EditableText } from './ui/Editable';
 
 interface TestimonialsLegosProps {
-  items: Testimonial[];
+  content: {
+    sectionTitle?: string;
+    sectionSubtitle?: string;
+    items: Testimonial[];
+  };
+  styles: any;
+  onUpdate?: (newContent: any) => void;
+  readOnly?: boolean;
+  theme?: any;
 }
 
-const TestimonialsLegos: React.FC<TestimonialsLegosProps> = ({ items }) => {
-  if (!items || items.length === 0) {
+const TestimonialsLego: React.FC<TestimonialsLegosProps> = ({ content, styles, onUpdate, readOnly, theme }) => {
+  if (!content?.items || content.items.length === 0) {
     return null;
   }
 
@@ -16,11 +25,25 @@ const TestimonialsLegos: React.FC<TestimonialsLegosProps> = ({ items }) => {
     <section id="testimonials" className="py-32 px-6 bg-[#0a0a0a]">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
-          <h3 className="text-[#FFD700] text-sm font-bold uppercase tracking-widest mb-2">Livre d'Or</h3>
-          <h2 className="text-4xl md:text-5xl font-bold text-white font-serif">Ce que disent nos clients</h2>
+          <EditableText 
+            tag="h3" 
+            className="text-[#FFD700] text-sm font-bold uppercase tracking-widest mb-2" 
+            value={content.sectionSubtitle} 
+            onChange={(val) => onUpdate && onUpdate({ ...content, sectionSubtitle: val })} 
+            placeholder="Livre d'Or"
+            readOnly={readOnly}
+          />
+          <EditableText 
+            tag="h2" 
+            className="text-4xl md:text-5xl font-bold text-white font-serif" 
+            value={content.sectionTitle} 
+            onChange={(val) => onUpdate && onUpdate({ ...content, sectionTitle: val })} 
+            placeholder="Ce que disent nos clients"
+            readOnly={readOnly}
+          />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {items.map((testimonial, idx) => (
+          {content.items.map((testimonial, idx) => (
             <motion.div
               key={idx}
               initial={{ opacity: 0, y: 20 }}
@@ -43,4 +66,4 @@ const TestimonialsLegos: React.FC<TestimonialsLegosProps> = ({ items }) => {
   );
 };
 
-export default TestimonialsLegos;
+export default TestimonialsLego;

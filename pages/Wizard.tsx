@@ -1,18 +1,21 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { motion } from 'framer-motion';
 import { db, auth } from '../lib/firebase';
 import { doc, getDoc, updateDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
-import { signOut } from 'firebase/auth';
+import { signOut, updatePassword } from 'firebase/auth';
 import { 
   Sparkles, Send, Star, MapPin, 
   ShoppingBag, Newspaper, CheckCircle, Loader2, LogOut,
   Plus, Trash2, Image as ImageIcon, Flag, ThumbsUp, MessageCircle, 
   User, Briefcase, Edit3, Camera, UploadCloud, X, Phone, Mail, MessageSquareQuote,
-  Clock, Building2, CreditCard, Banknote, Smartphone, Copy, AlertTriangle, QrCode, FileText, Lock, Link as LinkIcon, Crown
+  Clock, Building2, CreditCard, Banknote, Smartphone, Copy, AlertTriangle, QrCode, FileText, Lock, Link as LinkIcon, Crown,
+  Monitor, ShieldCheck, KeyRound
 } from 'lucide-react';
 import { AppView, CreatorProfile } from '../types';
 
 import { QRCodeCanvas } from 'qrcode.react';
+import EditableText from '../components/EditableText';
 // @ts-ignore
 import html2pdf from 'html2pdf.js';
 
@@ -25,20 +28,21 @@ interface WizardProps {
 }
 
 export default function Wizard({ onNavigate, platformPrice }: WizardProps) {
-  const { user, loading } = useAuth();
+  const { user, userData: contextUserData, loading, isImpersonating, clearImpersonation } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // --- ÉTATS GLOBAUX ---
   const [step, setStep] = useState<'prompt' | 'generating' | 'showroom' | 'studio'>('prompt'); 
   const [userData, setUserData] = useState<any>(null);
   
+  
   // --- ÉTATS CREATION ---
   const [promptValue, setPromptValue] = useState('');
   const [selectedModel, setSelectedModel] = useState<string | null>(null);
 
   // --- ÉTATS STUDIO INTERACTIF ---
-  const [activeTab, setActiveTab] = useState<'identity' | 'portfolio' | 'social' | 'catalog' | 'reputation' | 'location' | 'prestige'>('identity');
-  const [uploadTarget, setUploadTarget] = useState<'profile' | 'cover' | 'project' | 'post' | 'catalog' | null>(null);
+  const [activeTab, setActiveTab] = useState<'identity' | 'portfolio' | 'social' | 'catalog' | 'reputation' | 'location' | 'prestige' | 'action' | 'security'>('identity');
+  const [uploadTarget, setUploadTarget] = useState<'profile' | 'cover' | 'project' | 'post' | 'catalog' | 'paymentProof' | null>(null);
   
   // --- ÉTATS PRESTIGE ---
   const [desiredDomain, setDesiredDomain] = useState("");
@@ -52,6 +56,15 @@ export default function Wizard({ onNavigate, platformPrice }: WizardProps) {
   const [linkCopied, setLinkCopied] = useState(false);
   const [isPdfGenerating, setIsPdfGenerating] = useState(false);
   const [paymentProof, setPaymentProof] = useState<string | null>(null);
+  const [content, setContent] = useState<any>({
+    skillsSectionTitle: 'Mes Compétences',
+    experienceSectionTitle: 'Mon Parcours',
+    projectsSectionTitle: 'Mes Réalisations',
+    socialWallSectionTitle: 'Mur Social',
+    catalogSectionTitle: 'Catalogue',
+    testimonialsSectionTitle: 'Témoignages Clients',
+    locationSectionTitle: 'Localisation',
+  });
   const qrRef = useRef<HTMLCanvasElement>(null);
 
   // 1. Identité Visuelle & Contact
@@ -62,6 +75,16 @@ export default function Wizard({ onNavigate, platformPrice }: WizardProps) {
   const [bio, setBio] = useState(""); 
   const [location, setLocation] = useState({ commune: '', address: '' });
   const [layoutType, setLayoutType] = useState<'GALLERY' | 'CATALOGUE' | 'SERVICES'>('GALLERY');
+
+  // 6. Action Royale
+  const [googleFormUrl, setGoogleFormUrl] = useState("");
+  const [customButtons, setCustomButtons] = useState<{ title: string, link: string }[]>([]);
+  const [newCustomButton, setNewCustomButton] = useState({ title: '', link: '' });
+  const [newPassword, setNewPassword] = useState('');
+  const [passwordUpdateStatus, setPasswordUpdateStatus] = useState<'idle' | 'success' | 'error'>('idle');
+
+  // --- ÉTATS PREVIEW ---
+  const [previewMode, setPreviewMode] = useState<'mobile' | 'desktop'>('mobile');
 
   // 2. Portfolio / Expertise
   const [skills, setSkills] = useState<string[]>([]);
@@ -94,6 +117,12 @@ export default function Wizard({ onNavigate, platformPrice }: WizardProps) {
     { id: 'executive', name: 'Executive', desc: 'Bleu & Gris - Entreprise & État', color: '#94a3b8', bg: '#1e293b' }
   ];
 
+  const handleContentSave = (field: string, value: string) => {
+    const newContent = { ...content, [field]: value };
+    setContent(newContent);
+    saveToDb('content', newContent);
+  };
+
   // --- INITIALISATION ---
   useEffect(() => {
     if (!loading && !user) {
@@ -101,45 +130,42 @@ export default function Wizard({ onNavigate, platformPrice }: WizardProps) {
         return;
     }
     
-    if (user) {
-        const fetchUserData = async () => {
-            const snap = await getDoc(doc(db, "users", user.uid));
-            if (snap.exists()) {
-                const data = snap.data();
-                setUserData(data);
-                
-                // Charger les données existantes
-                if (data.posts) setPosts(data.posts);
-                if (data.catalog) setCatalog(data.catalog);
-                if (data.skills) setSkills(data.skills);
-                if (data.projects) setProjects(data.projects);
-                if (data.experiences) setExperiences(data.experiences);
-                if (data.testimonials) setTestimonials(data.testimonials);
-                
-                setPhone(data.phone || "");
-                setEmail(data.email || "");
-                setBio(data.bio || "");
-                setLocation(data.location || { commune: '', address: '' });
-                if (data.layoutType) setLayoutType(data.layoutType);
-                if (data.domainRequest) {
-                  setDesiredDomain(data.domainRequest.name || "");
-                  setDomainRequestStatus(data.domainRequest.status === 'pending' ? 'sent' : 'none');
-                }
+    if (contextUserData) {
+        const data = contextUserData;
+        setUserData(data);
+        
+        // Charger les données existantes
+        if (data.posts) setPosts(data.posts);
+        if (data.catalog) setCatalog(data.catalog);
+        if (data.skills) setSkills(data.skills);
+        if (data.projects) setProjects(data.projects);
+        if (data.experiences) setExperiences(data.experiences);
+        if (data.testimonials) setTestimonials(data.testimonials);
+        if (data.googleFormUrl) setGoogleFormUrl(data.googleFormUrl);
+        if (data.customButtons) setCustomButtons(data.customButtons);
+        
+        setPhone(data.phone || "");
+        setEmail(data.email || "");
+        setBio(data.bio || "");
+        setLocation(data.location || { commune: '', address: '' });
+        if (data.layoutType) setLayoutType(data.layoutType);
+        if (data.content) setContent(data.content);
+        if (data.domainRequest) {
+          setDesiredDomain(data.domainRequest.name || "");
+          setDomainRequestStatus(data.domainRequest.status === 'pending' ? 'sent' : 'none');
+        }
 
-                // Images par défaut ou chargées
-                setProfileImage(data.profileImage || `https://api.dicebear.com/7.x/initials/svg?seed=${data.name}`);
-                setCoverImage(data.coverImage || "https://images.unsplash.com/photo-1557683316-973673baf926?auto=format&fit=crop&w=800&q=80");
-                
-                // Restaurer l'état
-                if (data.hasGenerated) {
-                    setStep('studio');
-                    setSelectedModel(data.selectedModel || 'majestic'); 
-                }
-            }
-        };
-        fetchUserData();
+        // Images par défaut ou chargées
+        setProfileImage(data.profileImage || `https://api.dicebear.com/7.x/initials/svg?seed=${data.name}`);
+        setCoverImage(data.coverImage || "https://images.unsplash.com/photo-1557683316-973673baf926?auto=format&fit=crop&w=800&q=80");
+        
+        // Restaurer l'état
+        if (data.hasGenerated) {
+            setStep('studio');
+            setSelectedModel(data.selectedModel || 'majestic'); 
+        }
     }
-  }, [user, loading, onNavigate]);
+  }, [user, contextUserData, loading, onNavigate]);
 
   // --- COMPTE À REBOURS OFFRE ---
   useEffect(() => {
@@ -157,8 +183,9 @@ export default function Wizard({ onNavigate, platformPrice }: WizardProps) {
 
   // --- HELPER SAUVEGARDE ---
   const saveToDb = async (field: string, value: any) => {
-      if(user) {
-          await updateDoc(doc(db, "users", user.uid), { [field]: value });
+      const targetId = localStorage.getItem('godModeUser') || user?.uid;
+      if(targetId) {
+          await updateDoc(doc(db, "users", targetId), { [field]: value });
       }
   };
 
@@ -369,6 +396,20 @@ export default function Wizard({ onNavigate, platformPrice }: WizardProps) {
       saveToDb('bio', bio);
   };
 
+  const handleAddCustomButton = () => {
+      if (!newCustomButton.title.trim() || !newCustomButton.link.trim()) return;
+      const updated = [...customButtons, newCustomButton];
+      setCustomButtons(updated);
+      setNewCustomButton({ title: '', link: '' });
+      saveToDb('customButtons', updated);
+  };
+
+  const handleDeleteCustomButton = (index: number) => {
+      const updated = customButtons.filter((_, i) => i !== index);
+      setCustomButtons(updated);
+      saveToDb('customButtons', updated);
+  };
+
   const handleDownloadQR = () => {
       if (!userData?.isPaid || !qrRef.current) return;
       const canvas = qrRef.current;
@@ -407,8 +448,31 @@ export default function Wizard({ onNavigate, platformPrice }: WizardProps) {
   };
 
   const handleLogout = async () => {
+    if (isImpersonating) {
+      handleExitGodMode();
+      return;
+    }
     await signOut(auth);
     onNavigate(AppView.LANDING);
+  };
+
+  const handleExitGodMode = () => {
+    clearImpersonation();
+    onNavigate(AppView.ADMIN);
+  };
+
+  const handleUpdatePassword = async () => {
+    if (!user || !newPassword) return;
+    try {
+      await updatePassword(user, newPassword);
+      setNewPassword('');
+      setPasswordUpdateStatus('success');
+      setTimeout(() => setPasswordUpdateStatus('idle'), 3000);
+    } catch (error) {
+      console.error("Password update error:", error);
+      setPasswordUpdateStatus('error');
+      setTimeout(() => setPasswordUpdateStatus('idle'), 3000);
+    }
   };
 
 
@@ -490,6 +554,41 @@ export default function Wizard({ onNavigate, platformPrice }: WizardProps) {
   // --- STUDIO INTERACTIF ---
   return (
     <div className="flex h-screen bg-black text-white overflow-hidden font-sans relative">
+        {isImpersonating && (
+          <motion.div 
+            initial={{ y: -100 }}
+            animate={{ y: 0 }}
+            transition={{ type: 'spring', stiffness: 100, damping: 20 }}
+            className="absolute top-0 left-0 right-0 bg-red-600 text-white text-center p-2 z-[100] flex items-center justify-center gap-4 shadow-lg"
+          >
+            <p className="text-sm font-bold flex items-center gap-2"><ShieldCheck size={14}/> SESSION GOD MODE : Vous contrôlez actuellement le compte de {userData?.name}</p>
+            <button 
+              onClick={handleExitGodMode}
+              className="bg-white/20 hover:bg-white/40 text-white text-xs font-bold py-1 px-3 rounded-full"
+            >
+              QUITTER
+            </button>
+          </motion.div>
+        )}
+        {isImpersonating && (
+          <motion.div 
+            initial={{ y: -100 }}
+            animate={{ y: 0 }}
+            transition={{ type: 'spring', stiffness: 100, damping: 20 }}
+            className="absolute top-0 left-0 right-0 bg-red-600 text-white text-center p-2 z-[100] flex items-center justify-center gap-4 shadow-lg"
+          >
+            <p className="text-sm font-bold flex items-center gap-2"><ShieldCheck size={14}/> SESSION GOD MODE : Vous contrôlez actuellement le compte de {userData?.name}</p>
+            <button 
+              onClick={handleExitGodMode}
+              className="bg-white/20 hover:bg-white/40 text-white text-xs font-bold py-1 px-3 rounded-full"
+            >
+              QUITTER
+            </button>
+          </motion.div>
+        )}
+
+
+
         <style>{`
             @media print {
                 body * { visibility: hidden; }
@@ -656,77 +755,25 @@ export default function Wizard({ onNavigate, platformPrice }: WizardProps) {
 
         {/* === SIDEBAR DE COMMANDE === */}
         <div className="w-96 bg-[#0a0a0a] border-r border-white/10 flex flex-col z-20 shadow-2xl">
-            {/* OVERLAY SÉLECTION INITIALE */}
-            {!userData.layoutType && (
-                <div className="absolute inset-0 z-[60] bg-black/90 backdrop-blur-md flex flex-col items-center justify-center p-8 text-center animate-fade-in">
-                    <Sparkles className="text-[#FFD700] mb-6" size={48}/>
-                    <h2 className="text-2xl font-black text-white mb-4 tracking-tighter uppercase">Configuration de l'Empire</h2>
-                    <p className="text-gray-400 text-sm mb-8">Comment souhaitez-vous présenter votre activité ?</p>
-                    <div className="space-y-4 w-full">
-                        {[
-                            { id: 'GALLERY', label: 'Vitrine Visuelle (Photos/Art)', desc: 'Idéal pour photographes, artistes, décorateurs.', icon: <ImageIcon size={20}/> },
-                            { id: 'CATALOGUE', label: 'Catalogue & Prix (E-commerce/Menu)', desc: 'Idéal pour boutiques, restaurants, traiteurs.', icon: <ShoppingBag size={20}/> },
-                            { id: 'SERVICES', label: 'Services & Réservation (Agence/Événement)', desc: 'Idéal pour agences, DJs, consultants.', icon: <Briefcase size={20}/> }
-                        ].map(opt => (
-                            <button 
-                                key={opt.id}
-                                onClick={() => {
-                                    setLayoutType(opt.id as any);
-                                    saveToDb('layoutType', opt.id);
-                                    setUserData({ ...userData, layoutType: opt.id });
-                                }}
-                                className="w-full bg-[#111] border border-white/10 p-4 rounded-2xl flex items-center gap-4 hover:border-[#FFD700] hover:bg-white/5 transition group text-left"
-                            >
-                                <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center text-gray-500 group-hover:text-[#FFD700] transition">
-                                    {opt.icon}
-                                </div>
-                                <div>
-                                    <p className="text-sm font-bold text-white">{opt.label}</p>
-                                    <p className="text-[10px] text-gray-500">{opt.desc}</p>
-                                </div>
-                            </button>
-                        ))}
-                    </div>
-                </div>
-            )}
-
-            <div className="p-6 border-b border-white/10">
+            <div className="p-4 border-b border-white/10 flex justify-between items-center">
                 <h2 className="text-xl font-black tracking-tighter text-[#FFD700]">MYFOLIO <span className="text-white text-xs bg-white/10 px-2 py-1 rounded">STUDIO</span></h2>
-            </div>
-
-            {/* SÉLECTEUR DE LAYOUT (LEGO) */}
-            <div className="p-4 bg-white/5 border-b border-white/10">
-                <label className="text-[10px] font-black text-gray-500 uppercase mb-3 block tracking-widest">Type de Présentation</label>
-                <div className="grid grid-cols-3 gap-2">
-                    {[
-                        { id: 'GALLERY', icon: <ImageIcon size={14}/>, label: 'Vitrine' },
-                        { id: 'CATALOGUE', icon: <ShoppingBag size={14}/>, label: 'Catalogue' },
-                        { id: 'SERVICES', icon: <Briefcase size={14}/>, label: 'Services' }
-                    ].map(opt => (
-                        <button 
-                            key={opt.id}
-                            onClick={() => {
-                                setLayoutType(opt.id as any);
-                                saveToDb('layoutType', opt.id);
-                            }}
-                            className={`flex flex-col items-center gap-1 p-2 rounded-xl border transition ${layoutType === opt.id ? 'bg-[#FFD700] border-[#FFD700] text-black shadow-lg' : 'bg-black border-white/10 text-gray-500 hover:text-white'}`}
-                        >
-                            {opt.icon}
-                            <span className="text-[9px] font-bold uppercase">{opt.label}</span>
-                        </button>
-                    ))}
+                <div className="flex items-center gap-1 bg-black p-1 rounded-lg border border-white/10">
+                    <button onClick={() => setPreviewMode('mobile')} className={`px-2 py-1 rounded-md ${previewMode === 'mobile' ? 'bg-white/10' : ''}`}><Smartphone size={14}/></button>
+                    <button onClick={() => setPreviewMode('desktop')} className={`px-2 py-1 rounded-md ${previewMode === 'desktop' ? 'bg-white/10' : ''}`}><Monitor size={14}/></button>
                 </div>
             </div>
 
             {/* NAV TABS */}
-            <div className="flex border-b border-white/10 overflow-x-auto custom-scrollbar">
-                <button onClick={() => setActiveTab('identity')} className={`flex-1 min-w-[50px] py-4 flex justify-center items-center hover:bg-white/5 transition ${activeTab === 'identity' ? 'text-[#FFD700] border-b-2 border-[#FFD700]' : 'text-gray-500'}`} title="Identité"><User size={18}/></button>
-                <button onClick={() => setActiveTab('portfolio')} className={`flex-1 min-w-[50px] py-4 flex justify-center items-center hover:bg-white/5 transition ${activeTab === 'portfolio' ? 'text-[#FFD700] border-b-2 border-[#FFD700]' : 'text-gray-500'}`} title="Portfolio"><Briefcase size={18}/></button>
-                <button onClick={() => setActiveTab('social')} className={`flex-1 min-w-[50px] py-4 flex justify-center items-center hover:bg-white/5 transition ${activeTab === 'social' ? 'text-[#FFD700] border-b-2 border-[#FFD700]' : 'text-gray-500'}`} title="Mur Social"><Newspaper size={18}/></button>
-                <button onClick={() => setActiveTab('catalog')} className={`flex-1 min-w-[50px] py-4 flex justify-center items-center hover:bg-white/5 transition ${activeTab === 'catalog' ? 'text-[#FFD700] border-b-2 border-[#FFD700]' : 'text-gray-500'}`} title="Catalogue"><ShoppingBag size={18}/></button>
-                <button onClick={() => setActiveTab('reputation')} className={`flex-1 min-w-[50px] py-4 flex justify-center items-center hover:bg-white/5 transition ${activeTab === 'reputation' ? 'text-[#FFD700] border-b-2 border-[#FFD700]' : 'text-gray-500'}`} title="Témoignages"><MessageSquareQuote size={18}/></button>
-                <button onClick={() => setActiveTab('location')} className={`flex-1 min-w-[50px] py-4 flex justify-center items-center hover:bg-white/5 transition ${activeTab === 'location' ? 'text-[#FFD700] border-b-2 border-[#FFD700]' : 'text-gray-500'}`} title="Localisation"><MapPin size={18}/></button>
-                <button onClick={() => setActiveTab('prestige')} className={`flex-1 min-w-[50px] py-4 flex justify-center items-center hover:bg-white/5 transition ${activeTab === 'prestige' ? 'text-[#FFD700] border-b-2 border-[#FFD700]' : 'text-gray-500'}`} title="Pack Prestige"><Crown size={18}/></button>
+            <div className="flex flex-row overflow-x-auto whitespace-nowrap w-full max-w-full pb-4 scrollbar-hide touch-pan-x">
+                <button onClick={() => setActiveTab('identity')} className={`flex-shrink-0 px-6 py-4 flex justify-center items-center hover:bg-white/5 transition ${activeTab === 'identity' ? 'text-[#FFD700] border-b-2 border-[#FFD700]' : 'text-gray-500'}`} title="Identité"><User size={18}/></button>
+                <button onClick={() => setActiveTab('portfolio')} className={`flex-shrink-0 px-6 py-4 flex justify-center items-center hover:bg-white/5 transition ${activeTab === 'portfolio' ? 'text-[#FFD700] border-b-2 border-[#FFD700]' : 'text-gray-500'}`} title="Portfolio"><Briefcase size={18}/></button>
+                <button onClick={() => setActiveTab('social')} className={`flex-shrink-0 px-6 py-4 flex justify-center items-center hover:bg-white/5 transition ${activeTab === 'social' ? 'text-[#FFD700] border-b-2 border-[#FFD700]' : 'text-gray-500'}`} title="Mur Social"><Newspaper size={18}/></button>
+                <button onClick={() => setActiveTab('catalog')} className={`flex-shrink-0 px-6 py-4 flex justify-center items-center hover:bg-white/5 transition ${activeTab === 'catalog' ? 'text-[#FFD700] border-b-2 border-[#FFD700]' : 'text-gray-500'}`} title="Catalogue"><ShoppingBag size={18}/></button>
+                <button onClick={() => setActiveTab('reputation')} className={`flex-shrink-0 px-6 py-4 flex justify-center items-center hover:bg-white/5 transition ${activeTab === 'reputation' ? 'text-[#FFD700] border-b-2 border-[#FFD700]' : 'text-gray-500'}`} title="Témoignages"><MessageSquareQuote size={18}/></button>
+                <button onClick={() => setActiveTab('location')} className={`flex-shrink-0 px-6 py-4 flex justify-center items-center hover:bg-white/5 transition ${activeTab === 'location' ? 'text-[#FFD700] border-b-2 border-[#FFD700]' : 'text-gray-500'}`} title="Localisation"><MapPin size={18}/></button>
+                <button onClick={() => setActiveTab('prestige')} className={`flex-shrink-0 px-6 py-4 flex justify-center items-center hover:bg-white/5 transition ${activeTab === 'prestige' ? 'text-[#FFD700] border-b-2 border-[#FFD700]' : 'text-gray-500'}`} title="Pack Prestige"><Crown size={18}/></button>
+                <button onClick={() => setActiveTab('action')} className={`flex-shrink-0 px-6 py-4 flex justify-center items-center hover:bg-white/5 transition ${activeTab === 'action' ? 'text-[#FFD700] border-b-2 border-[#FFD700]' : 'text-gray-500'}`} title="Action Royale"><LinkIcon size={18}/></button>
+                <button onClick={() => setActiveTab('security')} className={`flex-shrink-0 px-6 py-4 flex justify-center items-center hover:bg-white/5 transition ${activeTab === 'security' ? 'text-[#FFD700] border-b-2 border-[#FFD700]' : 'text-gray-500'}`} title="Sécurité"><KeyRound size={18}/></button>
             </div>
 
             <div className="flex-grow overflow-y-auto p-6 space-y-8 custom-scrollbar bg-[#0a0a0a]">
@@ -760,7 +807,10 @@ export default function Wizard({ onNavigate, platformPrice }: WizardProps) {
 
                         <div className="pt-4 border-t border-white/10">
                             <label className="text-xs font-bold text-gray-400 uppercase mb-2 block">Bio</label>
-                            <textarea value={bio} onChange={(e) => setBio(e.target.value)} onBlur={handleSaveBioContact} className="w-full bg-black border border-white/20 rounded-lg p-2 text-sm text-white h-24" placeholder="Votre biographie..."/>
+                            <div className="relative">
+                                <textarea value={bio} onChange={(e) => setBio(e.target.value)} onBlur={handleSaveBioContact} className="w-full bg-black border border-white/20 rounded-lg p-2 text-sm text-white h-24" placeholder="Votre biographie..."/>
+                                <button onClick={() => setBio('Pionnier de l\'excellence, je transforme les visions en réalité avec une précision inégalée.')} className="absolute bottom-2 right-2 bg-white/10 text-white p-1 rounded"><Sparkles size={12}/></button>
+                            </div>
                         </div>
 
                         <div>
@@ -768,11 +818,17 @@ export default function Wizard({ onNavigate, platformPrice }: WizardProps) {
                             <div className="space-y-2">
                                 <div className="flex items-center gap-2">
                                     <Phone size={16} className="text-gray-500"/>
-                                    <input value={phone} onChange={(e) => setPhone(e.target.value)} onBlur={handleSaveBioContact} className="flex-1 bg-black border border-white/20 rounded-lg p-2 text-sm text-white" placeholder="Téléphone (Appel direct)"/>
+                                    <div className="relative flex-1">
+                                        <input value={phone} onChange={(e) => setPhone(e.target.value)} onBlur={handleSaveBioContact} className="w-full bg-black border border-white/20 rounded-lg p-2 text-sm text-white" placeholder="Téléphone (Appel direct)"/>
+                                        <button onClick={() => setPhone('+243 81 234 5678')} className="absolute top-1/2 -translate-y-1/2 right-2 bg-white/10 text-white p-1 rounded"><Sparkles size={12}/></button>
+                                    </div>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <Mail size={16} className="text-gray-500"/>
-                                    <input value={email} onChange={(e) => setEmail(e.target.value)} onBlur={handleSaveBioContact} className="flex-1 bg-black border border-white/20 rounded-lg p-2 text-sm text-white" placeholder="Adresse Email"/>
+                                    <div className="relative flex-1">
+                                        <input value={email} onChange={(e) => setEmail(e.target.value)} onBlur={handleSaveBioContact} className="w-full bg-black border border-white/20 rounded-lg p-2 text-sm text-white" placeholder="Adresse Email"/>
+                                        <button onClick={() => setEmail('contact@mon-empire.com')} className="absolute top-1/2 -translate-y-1/2 right-2 bg-white/10 text-white p-1 rounded"><Sparkles size={12}/></button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -784,7 +840,7 @@ export default function Wizard({ onNavigate, platformPrice }: WizardProps) {
                     <div className="space-y-8 animate-fade-in">
                         {/* Compétences */}
                         <div className="space-y-3">
-                             <label className="text-xs font-black text-[#FFD700] uppercase tracking-widest block">Mes Compétences</label>
+                             <EditableText tag="h2" value={content.skillsSectionTitle} onSave={(newValue) => handleContentSave('skillsSectionTitle', newValue)} className="text-xs font-black text-[#FFD700] uppercase tracking-widest block relative z-50 cursor-text pointer-events-auto" />
                              <div className="flex gap-2">
                                 <input 
                                     type="text" 
@@ -806,7 +862,7 @@ export default function Wizard({ onNavigate, platformPrice }: WizardProps) {
 
                         {/* Expérience (NEW) */}
                         <div className="space-y-3 pt-4 border-t border-white/10">
-                             <label className="text-xs font-black text-[#FFD700] uppercase tracking-widest block">Mon Parcours</label>
+                             <EditableText tag="h2" value={content.experienceSectionTitle} onSave={(newValue) => handleContentSave('experienceSectionTitle', newValue)} className="text-xs font-black text-[#FFD700] uppercase tracking-widest block relative z-50 cursor-text pointer-events-auto" />
                              <div className="grid grid-cols-2 gap-2">
                                  <input value={newExperience.role} onChange={(e) => setNewExperience({...newExperience, role: e.target.value})} className="bg-black border border-white/20 rounded-lg px-2 py-2 text-sm text-white" placeholder="Rôle (ex: CEO)"/>
                                  <input value={newExperience.year} onChange={(e) => setNewExperience({...newExperience, year: e.target.value})} className="bg-black border border-white/20 rounded-lg px-2 py-2 text-sm text-white" placeholder="Année"/>
@@ -827,7 +883,7 @@ export default function Wizard({ onNavigate, platformPrice }: WizardProps) {
 
                         {/* Projets */}
                         <div className="space-y-3 pt-6 border-t border-white/10">
-                             <label className="text-xs font-black text-[#FFD700] uppercase tracking-widest block">Nouvelle Réalisation</label>
+                             <EditableText tag="h2" value={content.projectsSectionTitle} onSave={(newValue) => handleContentSave('projectsSectionTitle', newValue)} className="text-xs font-black text-[#FFD700] uppercase tracking-widest block relative z-50 cursor-text pointer-events-auto" />
                              
                              <div 
                                 className="w-full h-20 bg-black border border-dashed border-white/20 rounded-lg flex items-center justify-center cursor-pointer hover:border-[#FFD700] hover:bg-white/5 transition mb-2"
@@ -880,7 +936,7 @@ export default function Wizard({ onNavigate, platformPrice }: WizardProps) {
                 {/* 3. TAB SOCIAL */}
                 {activeTab === 'social' && (
                     <div className="space-y-4 animate-fade-in">
-                        <h3 className="text-xs font-black text-[#FFD700] uppercase tracking-widest">Mur Social</h3>
+                        <EditableText tag="h3" value={content.socialWallSectionTitle} onSave={(newValue) => handleContentSave('socialWallSectionTitle', newValue)} className="text-xs font-black text-[#FFD700] uppercase tracking-widest relative z-50 cursor-text pointer-events-auto" />
                         <textarea 
                             value={newPost.text}
                             onChange={(e) => setNewPost({...newPost, text: e.target.value})}
@@ -922,7 +978,7 @@ export default function Wizard({ onNavigate, platformPrice }: WizardProps) {
                 {/* 4. TAB CATALOG */}
                 {activeTab === 'catalog' && (
                     <div className="space-y-4 animate-fade-in">
-                        <h3 className="text-xs font-black text-[#FFD700] uppercase tracking-widest">Catalogue</h3>
+                        <EditableText tag="h3" value={content.catalogSectionTitle} onSave={(newValue) => handleContentSave('catalogSectionTitle', newValue)} className="text-xs font-black text-[#FFD700] uppercase tracking-widest relative z-50 cursor-text pointer-events-auto" />
                         <input 
                             type="text" placeholder="Nom du produit/service"
                             value={newItem.title}
@@ -977,7 +1033,7 @@ export default function Wizard({ onNavigate, platformPrice }: WizardProps) {
                 {/* 5. TAB REPUTATION (Témoignages) */}
                 {activeTab === 'reputation' && (
                     <div className="space-y-4 animate-fade-in">
-                        <h3 className="text-xs font-black text-[#FFD700] uppercase tracking-widest">Témoignages Clients</h3>
+                        <EditableText tag="h3" value={content.testimonialsSectionTitle} onSave={(newValue) => handleContentSave('testimonialsSectionTitle', newValue)} className="text-xs font-black text-[#FFD700] uppercase tracking-widest relative z-50 cursor-text pointer-events-auto" />
                         <input 
                             type="text" placeholder="Nom du Client"
                             value={newTestimonial.name}
@@ -1023,7 +1079,7 @@ export default function Wizard({ onNavigate, platformPrice }: WizardProps) {
                 {/* 6. TAB LOCATION */}
                 {activeTab === 'location' && (
                     <div className="space-y-6 animate-fade-in">
-                        <h3 className="text-xs font-black text-[#FFD700] uppercase tracking-widest mb-4">Localisation</h3>
+                        <EditableText tag="h3" value={content.locationSectionTitle} onSave={(newValue) => handleContentSave('locationSectionTitle', newValue)} className="text-xs font-black text-[#FFD700] uppercase tracking-widest mb-4 relative z-50 cursor-text pointer-events-auto" />
                         
                         <div className="space-y-5">
                             <div>
@@ -1065,6 +1121,83 @@ export default function Wizard({ onNavigate, platformPrice }: WizardProps) {
                         </div>
                     </div>
                 )}
+
+                {/* 8. TAB ACTION ROYALE (NOUVEAU) */}
+                {activeTab === 'action' && (
+                    <div className="space-y-6 animate-fade-in">
+                        <h3 className="text-xs font-black text-[#FFD700] uppercase tracking-widest mb-4">Action & Formulaire</h3>
+                        
+                        <div>
+                            <label className="text-xs font-bold text-gray-400 uppercase mb-2 block">URL de Formulaire (Google Forms, etc.)</label>
+                            <input 
+                                value={googleFormUrl}
+                                onChange={(e) => setGoogleFormUrl(e.target.value)}
+                                onBlur={() => saveToDb('googleFormUrl', googleFormUrl)}
+                                className="w-full bg-black border border-white/20 rounded-lg p-2 text-sm text-white" 
+                                placeholder="https://docs.google.com/forms/..."
+                            />
+                        </div>
+
+                        <div className="border-t border-white/10 my-4"></div>
+
+                        <div>
+                            <label className="text-xs font-bold text-gray-400 uppercase mb-2 block">Boutons Personnalisés</label>
+                            <div className="space-y-2">
+                                {customButtons.map((btn, index) => (
+                                    <div key={index} className="flex items-center gap-2 bg-black p-2 rounded-lg">
+                                        <input type="text" value={btn.title} readOnly className="flex-1 bg-transparent text-white text-sm"/>
+                                        <input type="text" value={btn.link} readOnly className="flex-1 bg-transparent text-gray-500 text-xs"/>
+                                        <button onClick={() => handleDeleteCustomButton(index)} className="p-1 text-red-500 hover:bg-red-500/10 rounded"><Trash2 size={14}/></button>
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="flex items-center gap-2 mt-2">
+                                <input 
+                                    value={newCustomButton.title}
+                                    onChange={(e) => setNewCustomButton({ ...newCustomButton, title: e.target.value })}
+                                    className="flex-1 bg-black border border-white/20 rounded-lg p-2 text-sm text-white" 
+                                    placeholder="Titre du bouton"
+                                />
+                                <input 
+                                    value={newCustomButton.link}
+                                    onChange={(e) => setNewCustomButton({ ...newCustomButton, link: e.target.value })}
+                                    className="flex-1 bg-black border border-white/20 rounded-lg p-2 text-sm text-white" 
+                                    placeholder="https://lien.com"
+                                />
+                                <button onClick={handleAddCustomButton} className="bg-[#FFD700] text-black p-2 rounded-lg"><Plus size={16}/></button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {activeTab === 'security' && (
+                    <div className="space-y-6 animate-fade-in">
+                        <h3 className="text-xs font-black text-[#FFD700] uppercase tracking-widest mb-4">Sécurité du Compte</h3>
+                        <div className="bg-black border border-[#FFD700]/20 p-4 rounded-lg">
+                            <label className="text-xs font-bold text-gray-400 uppercase mb-2 block">Nouveau mot de passe</label>
+                            <div className="flex items-center gap-2">
+                                <input 
+                                    type="password"
+                                    value={newPassword}
+                                    onChange={(e) => setNewPassword(e.target.value)}
+                                    className="w-full bg-[#111] border border-white/20 rounded-lg p-2 text-sm text-white" 
+                                    placeholder="••••••••"
+                                />
+                                <button 
+                                    onClick={handleUpdatePassword}
+                                    className="bg-[#FFD700] text-black font-bold px-4 py-2 rounded-lg hover:bg-[#FDB931] transition disabled:opacity-50"
+                                    disabled={!newPassword}
+                                >
+                                    Mettre à jour
+                                </button>
+                            </div>
+                            {passwordUpdateStatus === 'success' && <p className="text-green-500 text-xs mt-2">Accès sécurisé avec succès !</p>}
+                            {passwordUpdateStatus === 'error' && <p className="text-red-500 text-xs mt-2">Erreur. Veuillez vous reconnecter et réessayer.</p>}
+                        </div>
+                    </div>
+                )}
+
+
 
                 {/* 7. TAB PRESTIGE (NOUVEAU) */}
                 {activeTab === 'prestige' && (
@@ -1152,15 +1285,16 @@ export default function Wizard({ onNavigate, platformPrice }: WizardProps) {
                                     <input 
                                         type="text" 
                                         readOnly
-                                        value={userData?.isPaid && user?.uid ? `${window.location.origin}/?p=${user?.uid}` : `https://myfoliotag.com/${userData?.portfolioSlug?.slice(0,3)}*******`}
+                                        value={userData?.isPaid ? `${window.location.origin}/${userData?.portfolioSlug || user?.uid}` : `Lien Pro verrouillé...`}
                                         className={`w-full bg-[#111] border border-white/10 rounded-lg py-3 px-4 text-xs outline-none font-mono ${!userData?.isPaid ? 'text-gray-600' : 'text-[#FFD700]'}`}
                                     />
                                     {!userData?.isPaid && <Lock size={12} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600"/>}
                                 </div>
                                 <button 
                                     onClick={() => {
-                                        if(userData?.isPaid && user?.uid) {
-                                            navigator.clipboard.writeText(`${window.location.origin}/?p=${user?.uid}`);
+                                        if(userData?.isPaid) {
+                                            const urlToCopy = `${window.location.origin}/${userData?.portfolioSlug || user?.uid}`;
+                                            navigator.clipboard.writeText(urlToCopy);
                                             setLinkCopied(true);
                                             setTimeout(() => setLinkCopied(false), 2000);
                                         }
@@ -1177,12 +1311,11 @@ export default function Wizard({ onNavigate, platformPrice }: WizardProps) {
                         {/* SLOT 1 : QR CODE */}
                         <div className="relative group">
                             <div className={`bg-[#111] border border-white/10 rounded-xl p-6 flex flex-col items-center text-center transition-all ${!userData?.isPaid ? 'blur-sm opacity-50 select-none pointer-events-none' : ''}`}>
-                                <div className="bg-white p-3 rounded-xl mb-4">
+                                <div className="bg-white p-2 rounded-lg mb-4">
                                     <QRCodeCanvas 
-                                        value={userData?.isPaid && user?.uid ? `${window.location.origin}/?p=${user?.uid}` : `https://myfoliotag.com/${userData?.portfolioSlug}`}
+                                        value={`${window.location.origin}/${userData?.portfolioSlug || user?.uid}`} 
                                         size={128}
-                                        level={"Q"}
-                                        includeMargin={true}
+                                        level={"H"}
                                         ref={qrRef}
                                     />
                                 </div>
@@ -1245,7 +1378,7 @@ export default function Wizard({ onNavigate, platformPrice }: WizardProps) {
 
         {/* === PREVIEW (LE TÉLÉPHONE) === */}
         <div className="flex-grow bg-[#111] overflow-y-auto p-10 flex justify-center items-start custom-scrollbar">
-            <div id="portfolio-preview" className="portfolio-preview-container w-full max-w-sm bg-black rounded-[3rem] border-[8px] border-[#222] shadow-[0_0_50px_rgba(0,0,0,0.5)] relative overflow-hidden pb-10 min-h-[800px]">
+            <div id="portfolio-preview" className={`portfolio-preview-container bg-black shadow-[0_0_50px_rgba(0,0,0,0.5)] relative overflow-hidden pb-10 min-h-[800px] transition-all duration-500 ${previewMode === 'mobile' ? 'w-[375px] h-[812px] rounded-[3rem] border-[8px] border-[#222]' : 'w-full max-w-full rounded-none border-0'}`}>
                 
                 {/* --- 1. HEADER (IDENTITÉ) --- */}
                 <div className="relative">

@@ -78,9 +78,13 @@ export default function Profile({ userId }: { userId: string }) {
     <div className="h-screen w-full flex items-center justify-center bg-black">
       <div className="w-full max-w-4xl h-full overflow-y-auto custom-scrollbar">
         <PortfolioPreview 
-          profile={profileData}
-          selectedModel={profileData.selectedModel || 'majestic'}
-          isPublicView={true}
+          config={profileData.portfolio}
+          phone={profileData.phone}
+          creatorId={profileData.id}
+          expiryDate={profileData.expiryDate}
+          isIsolated={true}
+          creatorName={profileData.name}
+          creatorData={profileData}
         />
       </div>
     </div>

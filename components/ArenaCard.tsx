@@ -11,21 +11,21 @@ interface ArenaCardProps {
 
 const ArenaCard: React.FC<ArenaCardProps> = ({ provider, onClick, onReviewClick, onTagClick }) => {
   // Mapping data safely
-  const hero = provider.portfolio.sections.find(s => s.type === 'hero')?.content || {};
-  const bio = provider.portfolio.sections.find(s => s.type === 'bio')?.content || {};
-  const contact = provider.portfolio.sections.find(s => s.type === 'contact')?.content || {};
-  const social = provider.portfolio.sections.find(s => s.type === 'social')?.content || {};
+  const hero = provider?.portfolio?.sections?.find(s => s.type === 'hero')?.content || {};
+  const bio = provider?.portfolio?.sections?.find(s => s.type === 'bio')?.content || {};
+  const contact = provider?.portfolio?.sections?.find(s => s.type === 'contact')?.content || {};
+  const social = provider?.portfolio?.sections?.find(s => s.type === 'social')?.content || {};
 
   const flatProvider = {
-    name: provider.name,
-    profession: provider.category || "Créatif",
-    location: provider.location?.commune || contact.address?.split(',')[0] || "Kinshasa",
-    rating: provider.rating,
-    reviews: provider.reviewCount,
-    isVerified: provider.verified,
-    coverImage: hero.backgroundImage || "https://images.unsplash.com/photo-1557683316-973673baf926?auto=format&fit=crop&w=800&q=80",
-    avatar: bio.image || social.userAvatar || "https://via.placeholder.com/100",
-    phone: provider.phone
+    name: provider?.name || "Prestataire",
+    profession: provider?.category || "Créatif",
+    location: provider?.location?.commune || contact?.address?.split(',')[0] || "Kinshasa",
+    rating: provider?.rating || 5,
+    reviews: provider?.reviewCount || 0,
+    isVerified: provider?.verified || false,
+    coverImage: hero?.backgroundImage || "https://images.unsplash.com/photo-1557683316-973673baf926?auto=format&fit=crop&w=800&q=80",
+    avatar: bio?.image || social?.userAvatar || "https://via.placeholder.com/100",
+    phone: provider?.phone || ""
   };
   
   const getWhatsAppUrl = (phone: string) => {
@@ -105,7 +105,7 @@ console.error('Erreur de copie', err);
                 <span className="flex items-center gap-1"><MapPin size={10} /> {flatProvider.location}</span>
             </div>
             <div className="flex flex-wrap gap-2 mt-2">
-                {provider.tags?.map((tag, index) => (
+                {provider?.tags?.map((tag, index) => (
                     <button key={index} onClick={() => onTagClick(tag)} className="text-[10px] bg-white/5 text-gray-400 px-2 py-1 rounded hover:bg-gold-400 hover:text-black transition">
                         #{tag}
                     </button>

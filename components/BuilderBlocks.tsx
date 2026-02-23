@@ -1,5 +1,5 @@
 import React from 'react';
-import { Mail, Phone, ArrowRight, Star, MapPin, MessageCircle, Heart, Share2, MoreHorizontal, Calendar, ExternalLink, Play, Upload, Image as ImageIcon, ShoppingBag, Utensils } from 'lucide-react';
+import { Mail, Phone, ArrowRight, Star, MapPin, MessageCircle, Heart, Share2, MoreHorizontal, Calendar, ExternalLink, Play, Upload, Image as ImageIcon } from 'lucide-react';
 import { PortfolioTheme } from '../types';
 import { EditableText, EditableImage, EditableList } from './ui/Editable';
 
@@ -32,7 +32,7 @@ export const HeroBlock: React.FC<BlockProps> = ({ content, theme, onUpdate, read
     <>
       <EditableText
           tag="h1"
-          className="text-6xl md:text-9xl font-bold text-white mb-6 leading-none tracking-tighter drop-shadow-2xl relative z-10"
+          className="text-6xl md:text-9xl font-bold text-white mb-6 leading-none tracking-tighter drop-shadow-2xl"
           value={content.title}
           onChange={(val) => handleChange('title', val)}
           placeholder="Votre Titre"
@@ -40,13 +40,13 @@ export const HeroBlock: React.FC<BlockProps> = ({ content, theme, onUpdate, read
       />
       <EditableText
           tag="p"
-          className="text-xl text-gray-200 mb-10 font-light italic max-w-2xl mx-auto relative z-10"
+          className="text-xl text-gray-200 mb-10 font-light italic max-w-2xl mx-auto"
           value={content.subtitle}
           onChange={(val) => handleChange('subtitle', val)}
           placeholder="Votre sous-titre"
           readOnly={readOnly}
       />
-      <button className={`${theme.primaryColor.replace('text', 'bg')} text-black px-12 py-5 text-lg font-bold rounded-full hover:scale-105 transition shadow-glow relative z-10`}>
+      <button className={`${theme.primaryColor.replace('text', 'bg')} text-black px-12 py-5 text-lg font-bold rounded-full hover:scale-105 transition shadow-glow`}>
            <EditableText
              tag="span"
              value={content.buttonText}
@@ -73,9 +73,9 @@ export const HeroBlock: React.FC<BlockProps> = ({ content, theme, onUpdate, read
           <div className={`absolute inset-0 opacity-20 mix-blend-overlay ${theme.primaryColor.replace('text', 'bg')} pointer-events-none`}></div>
         </div>
         <div className="relative z-10 text-center px-4 max-w-5xl animate-fade-in-up">
-          <div className="mb-6 inline-flex items-center gap-2 px-4 py-2 border border-white/20 rounded-full bg-black/50 backdrop-blur-md shadow-glow">
-             <Star size={14} className="text-yellow-400 fill-yellow-400 animate-spin-slow"/> 
-             <span className="text-xs tracking-[0.2em] text-white uppercase font-bold">Portfolio Premium</span>
+          <div className="mb-6 inline-flex items-center gap-2 px-4 py-2 border border-white/20 rounded-full bg-white/5 backdrop-blur-md shadow-glow">
+             <Star size={14} className="text-gold-400 fill-gold-400 animate-spin-slow"/> 
+             <span className="text-xs tracking-[0.2em] text-white uppercase">Portfolio Premium</span>
           </div>
           {renderHeroContent()}
         </div>
@@ -88,7 +88,7 @@ export const HeroBlock: React.FC<BlockProps> = ({ content, theme, onUpdate, read
     return (
       <div className={`min-h-[90vh] flex flex-col md:flex-row bg-black/80 backdrop-blur-sm ${font}`}>
         <div className="flex-1 flex flex-col justify-center p-12 md:p-24 relative z-10">
-           <span className={`text-sm uppercase tracking-widest mb-4 font-bold ${theme.primaryColor}`}>Bienvenue chez</span>
+           <span className={`text-sm uppercase tracking-widest mb-4 ${theme.primaryColor}`}>Bienvenue chez</span>
            <EditableText
              tag="h1"
              className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight"
@@ -133,7 +133,7 @@ export const HeroBlock: React.FC<BlockProps> = ({ content, theme, onUpdate, read
         <div className="absolute top-20 right-20 w-64 h-64 bg-white/5 rounded-full blur-[100px]"></div>
         <div className={`absolute bottom-20 left-20 w-96 h-96 ${theme.primaryColor.replace('text', 'bg')}/10 rounded-full blur-[120px]`}></div>
         
-        <div className="max-w-7xl mx-auto w-full border-t border-white/10 pt-10 animate-fade-in relative z-10">
+        <div className="max-w-7xl mx-auto w-full border-t border-white/10 pt-10 animate-fade-in">
             <EditableText
                 tag="h1"
                 className="text-[10vw] font-bold text-white leading-[0.8] mb-8 tracking-tighter opacity-90 break-words"
@@ -150,10 +150,10 @@ export const HeroBlock: React.FC<BlockProps> = ({ content, theme, onUpdate, read
                     readOnly={readOnly}
                 />
                 <button className="flex items-center gap-4 text-white hover:gap-6 transition-all group">
-                    <span className={`w-16 h-16 rounded-full border border-white/20 flex items-center justify-center group-hover:border-white group-hover:bg-white/5`}>
-                        <ArrowRight className="text-white" />
+                    <span className={`w-16 h-16 rounded-full border border-white/20 flex items-center justify-center group-hover:border-${theme.primaryColor.split('-')[1] || 'white'} group-hover:bg-white/5`}>
+                        <ArrowRight />
                     </span>
-                    <span className="text-xl uppercase tracking-widest font-bold text-white">Entrer</span>
+                    <span className="text-xl uppercase tracking-widest">Entrer</span>
                 </button>
             </div>
         </div>
@@ -161,12 +161,9 @@ export const HeroBlock: React.FC<BlockProps> = ({ content, theme, onUpdate, read
   );
 };
 
-// --- 2. COMMERCE & SERVICES BLOCK (MULTI-MODES) ---
+// --- 2. SERVICES BLOCK ---
 export const ServicesBlock: React.FC<BlockProps> = ({ content, theme, onUpdate, readOnly = false }) => {
   const { radius, font } = getThemeClasses(theme);
-  
-  // layoutType détermine le mode: 'services' (défaut), 'catalog' (E-commerce), 'restaurant' (Menu)
-  const layoutType = content.layoutType || 'services';
 
   const handleItemChange = (index: number, key: string, val: string) => {
     if (!onUpdate) return;
@@ -177,12 +174,7 @@ export const ServicesBlock: React.FC<BlockProps> = ({ content, theme, onUpdate, 
 
   const handleAdd = () => {
     if (!onUpdate) return;
-    const newItems = [...(content.items || []), { 
-      name: "Nouvel Article", 
-      price: "0$", 
-      description: "Description...", 
-      image: "https://via.placeholder.com/400" 
-    }];
+    const newItems = [...(content.items || []), { name: "Nouveau Service", price: "0$", description: "Description..." }];
     onUpdate({ ...content, items: newItems });
   };
 
@@ -192,122 +184,17 @@ export const ServicesBlock: React.FC<BlockProps> = ({ content, theme, onUpdate, 
     onUpdate({ ...content, items: newItems });
   };
 
-  // MODE 1 : CATALOGUE E-COMMERCE
-  if (layoutType === 'catalog') {
-    return (
-      <div className={`py-24 px-6 relative z-10 ${font}`}>
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <ShoppingBag size={40} className={`mx-auto mb-4 ${theme.primaryColor}`} />
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">Notre Boutique</h2>
-            <div className={`h-1 w-24 mx-auto ${theme.primaryColor.replace('text', 'bg')}`}></div>
-          </div>
-
-          <EditableList
-              items={content.items}
-              onItemAdd={onUpdate ? handleAdd : undefined}
-              onItemRemove={onUpdate ? handleRemove : undefined}
-              readOnly={readOnly}
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
-              renderItem={(item, index) => (
-                  <div key={index} className={`bg-[#111] border border-white/5 overflow-hidden group hover:border-white/30 transition duration-500 ${radius}`}>
-                    <div className="h-64 bg-gray-900 relative overflow-hidden">
-                      <EditableImage 
-                        src={item.image || "https://via.placeholder.com/400"} 
-                        onChange={(url) => handleItemChange(index, 'image', url)} 
-                        className="w-full h-full object-cover group-hover:scale-110 transition duration-700" 
-                        readOnly={readOnly} 
-                      />
-                      <div className={`absolute top-4 right-4 bg-black/80 px-3 py-1 rounded-full border border-white/10 font-bold text-sm ${theme.primaryColor}`}>
-                        <EditableText 
-                          tag="span" 
-                          value={item.price} 
-                          onChange={(val) => handleItemChange(index, 'price', val)} 
-                          readOnly={readOnly} 
-                        />
-                      </div>
-                    </div>
-                    <div className="p-6">
-                      <EditableText 
-                        tag="h3" 
-                        className="text-xl font-bold text-white mb-2" 
-                        value={item.name} 
-                        onChange={(val) => handleItemChange(index, 'name', val)} 
-                        readOnly={readOnly} 
-                      />
-                      <EditableText 
-                        tag="p" 
-                        className="text-gray-500 text-sm mb-6" 
-                        value={item.description} 
-                        onChange={(val) => handleItemChange(index, 'description', val)} 
-                        readOnly={readOnly} 
-                      />
-                    </div>
-                  </div>
-              )}
-          />
-        </div>
-      </div>
-    );
-  }
-
-  // MODE 2 : MENU RESTAURANT
-  if (layoutType === 'restaurant') {
-    return (
-      <div className={`py-24 px-6 relative z-10 ${font}`}>
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-16">
-            <Utensils size={40} className={`mx-auto mb-4 ${theme.primaryColor}`} />
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">Notre Menu</h2>
-            <div className={`h-1 w-24 mx-auto ${theme.primaryColor.replace('text', 'bg')}`}></div>
-          </div>
-
-          <EditableList
-              items={content.items}
-              onItemAdd={onUpdate ? handleAdd : undefined}
-              onItemRemove={onUpdate ? handleRemove : undefined}
-              readOnly={readOnly}
-              className="space-y-6"
-              renderItem={(item, index) => (
-                  <div key={index} className="flex justify-between items-end border-b border-white/10 pb-4 group">
-                    <div className="flex-1 pr-4">
-                      <EditableText 
-                        tag="h3" 
-                        className={`text-xl font-bold text-white mb-1 group-hover:${theme.primaryColor} transition`} 
-                        value={item.name} 
-                        onChange={(val) => handleItemChange(index, 'name', val)} 
-                        readOnly={readOnly} 
-                      />
-                      <EditableText 
-                        tag="p" 
-                        className="text-gray-400 text-sm italic" 
-                        value={item.description} 
-                        onChange={(val) => handleItemChange(index, 'description', val)} 
-                        readOnly={readOnly} 
-                      />
-                    </div>
-                    <div className={`text-xl font-bold ${theme.primaryColor}`}>
-                      <EditableText 
-                        tag="span" 
-                        value={item.price} 
-                        onChange={(val) => handleItemChange(index, 'price', val)} 
-                        readOnly={readOnly} 
-                      />
-                    </div>
-                  </div>
-              )}
-          />
-        </div>
-      </div>
-    );
-  }
-
-  // MODE 3 : SERVICES CLASSIQUES (Défaut)
   return (
     <div className={`py-24 px-6 relative z-10 ${font}`}>
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">Nos Services</h2>
+          <EditableText
+              tag="h2"
+              className="text-4xl md:text-5xl font-bold text-white mb-4 relative z-50 cursor-text pointer-events-auto"
+              value={content.sectionTitle || 'Titre de la section'}
+              onChange={(val) => { if (onUpdate) onUpdate({ ...content, sectionTitle: val }) }}
+              readOnly={readOnly}
+          />
           <div className={`h-1 w-24 mx-auto ${theme.primaryColor.replace('text', 'bg')}`}></div>
         </div>
 
@@ -320,10 +207,13 @@ export const ServicesBlock: React.FC<BlockProps> = ({ content, theme, onUpdate, 
             renderItem={(item, index) => (
                 <div key={index} className={`
                   group relative p-8 bg-white/5 border border-white/10 
-                  hover:bg-white/10 transition-all duration-500 ${radius} overflow-hidden backdrop-blur-md
+                  hover:bg-white/10 hover:border-${theme.primaryColor.split('-')[1] || 'gold'}-500/50
+                  transition-all duration-500 ${radius} overflow-hidden backdrop-blur-md
                 `}>
-                  <div className={`w-12 h-12 mb-6 flex items-center justify-center text-white bg-black/50 border border-white/10 ${radius}`}>
-                    <Star size={20} className={theme.primaryColor.replace('text-', 'text-')} />
+                  <div className={`absolute -right-10 -top-10 w-32 h-32 ${theme.primaryColor.replace('text', 'bg')} opacity-10 blur-[50px] group-hover:opacity-20 transition duration-500`}></div>
+                  
+                  <div className={`w-12 h-12 mb-6 flex items-center justify-center text-white bg-white/10 ${radius}`}>
+                    <Star size={20} className={theme.primaryColor} />
                   </div>
                   
                   <EditableText
@@ -351,7 +241,7 @@ export const ServicesBlock: React.FC<BlockProps> = ({ content, theme, onUpdate, 
                         onChange={(val) => handleItemChange(index, 'price', val)}
                         readOnly={readOnly}
                     />
-                    <ArrowRight size={20} className="text-white group-hover:translate-x-2 transition" />
+                    <ArrowRight size={20} className="text-gray-500 group-hover:text-white group-hover:translate-x-2 transition" />
                   </div>
                 </div>
             )}
@@ -384,9 +274,13 @@ export const GalleryBlock: React.FC<BlockProps> = ({ content, theme, onUpdate, r
 
   return (
     <div className={`py-20 px-4 bg-black/20 backdrop-blur-sm ${font}`}>
-      <h2 className="text-3xl font-bold text-center mb-10 text-white">
-        Mes Réalisations
-      </h2>
+      <EditableText 
+          tag="h2" 
+          className="text-3xl font-bold text-center mb-10 text-white relative z-50 cursor-text pointer-events-auto" 
+          value={content.sectionTitle || 'Titre de la section'}
+          onChange={(val) => { if (onUpdate) onUpdate({ ...content, sectionTitle: val }) }} 
+          readOnly={readOnly}
+      />
       <EditableList
         items={content.images}
         onItemAdd={onUpdate ? handleAdd : undefined}
@@ -426,7 +320,7 @@ export const BioBlock: React.FC<BlockProps> = ({ content, theme, onUpdate, readO
     <div className={`py-24 px-6 ${font} relative overflow-hidden z-10`}>
       <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-16">
         <div className="flex-1 relative w-full max-w-md aspect-[3/4]">
-           <div className={`absolute -inset-4 bg-gradient-to-br from-white/20 to-transparent blur-xl rounded-full opacity-50`}></div>
+           <div className={`absolute -inset-4 bg-gradient-to-br from-${theme.primaryColor.split('-')[1] || 'gold'}-500/20 to-transparent blur-xl rounded-full opacity-50`}></div>
            <div className={`relative h-full w-full overflow-hidden ${radius} border border-white/10 shadow-2xl group`}>
              <EditableImage 
                  src={content.image}
@@ -435,14 +329,14 @@ export const BioBlock: React.FC<BlockProps> = ({ content, theme, onUpdate, readO
                  alt="Portrait" 
                  readOnly={readOnly}
              />
-             <div className="absolute bottom-6 left-6 right-6 p-4 bg-black/80 backdrop-blur-xl border border-white/10 rounded-xl flex items-center gap-4 pointer-events-none">
+             <div className="absolute bottom-6 left-6 right-6 p-4 bg-black/60 backdrop-blur-xl border border-white/10 rounded-xl flex items-center gap-4 pointer-events-none">
                 <div className="relative">
                     <div className="w-3 h-3 bg-green-500 rounded-full animate-ping absolute"></div>
                     <div className="w-3 h-3 bg-green-500 rounded-full relative"></div>
                 </div>
                 <div>
                     <p className="text-[10px] text-gray-400 uppercase tracking-widest">Statut</p>
-                    <p className="text-white text-xs font-bold">Disponible</p>
+                    <p className="text-white text-xs font-bold">Disponible pour projets</p>
                 </div>
              </div>
            </div>
@@ -457,9 +351,9 @@ export const BioBlock: React.FC<BlockProps> = ({ content, theme, onUpdate, readO
               placeholder="Votre Titre"
               readOnly={readOnly}
            />
-           <button className={`w-full flex items-center gap-4 p-4 bg-black/50 border border-white/10 ${radius} hover:bg-white/10 transition group`}>
+           <button className={`w-full flex items-center gap-4 p-4 bg-white/5 border border-white/10 ${radius} hover:bg-white/10 transition group`}>
               <div className={`w-12 h-12 rounded-full ${theme.primaryColor.replace('text', 'bg')} flex items-center justify-center text-black group-hover:scale-110 transition`}>
-                 <Play fill="black" size={20} className="ml-1 text-black"/>
+                 <Play fill="black" size={20} className="ml-1"/>
               </div>
               <div className="flex-1 text-left">
                  <p className="text-xs text-gray-400 uppercase mb-1">Message Vocal</p>
@@ -480,7 +374,7 @@ export const BioBlock: React.FC<BlockProps> = ({ content, theme, onUpdate, readO
              />
            </div>
            
-           <div className="font-hand text-5xl text-gray-500 pt-4 opacity-80">
+           <div className="font-hand text-5xl text-gray-600 pt-4 opacity-70">
                 <EditableText
                     tag="div"
                     value={content.signature || content.name}
@@ -519,7 +413,13 @@ export const ExperienceBlock: React.FC<BlockProps> = ({ content, theme, onUpdate
 
   return (
     <div className={`py-24 px-6 bg-black/50 backdrop-blur ${font}`}>
-      <h2 className="text-3xl font-bold text-center text-white mb-16">Mon Parcours</h2>
+      <EditableText 
+          tag="h2" 
+          className="text-3xl font-bold text-center text-white mb-16 relative z-50 cursor-text pointer-events-auto" 
+          value={content.sectionTitle || 'Titre de la section'}
+          onChange={(val) => { if (onUpdate) onUpdate({ ...content, sectionTitle: val }) }} 
+          readOnly={readOnly}
+      />
       <div className="max-w-3xl mx-auto space-y-8 border-l border-white/10 pl-8 relative">
         <EditableList
             items={content.items}
@@ -578,18 +478,22 @@ export const SocialWallBlock: React.FC<BlockProps> = ({ content, theme, onUpdate
   return (
     <div className={`py-20 px-4 ${font} relative z-10`}>
       <div className="max-w-2xl mx-auto">
-        <h2 className="text-3xl font-bold text-center text-white mb-10 flex items-center justify-center gap-3">
-            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-            Mon Actualité
-        </h2>
+        <EditableText 
+            tag="h2" 
+            className="text-3xl font-bold text-center text-white mb-10 flex items-center justify-center gap-3 relative z-50 cursor-text pointer-events-auto" 
+            value={content.sectionTitle || 'Titre de la section'}
+            onChange={(val) => { if (onUpdate) onUpdate({ ...content, sectionTitle: val }) }} 
+            readOnly={readOnly}
+            leadingIcon={<span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>}
+        />
 
         {/* Zone de "Nouveau Post" */}
-        <div className={`mb-10 p-4 bg-black/60 border border-white/10 ${radius} flex gap-4 items-center`}>
-            <div className={`w-10 h-10 rounded-full bg-white flex items-center justify-center font-bold text-black overflow-hidden`}>
+        <div className={`mb-10 p-4 bg-white/5 border border-white/10 ${radius} flex gap-4 items-center`}>
+            <div className={`w-10 h-10 rounded-full ${theme.primaryColor.replace('text', 'bg')} flex items-center justify-center font-bold text-black overflow-hidden`}>
                 {content.userAvatar ? <img src={content.userAvatar} className="w-full h-full object-cover"/> : "Moi"}
             </div>
             <input type="text" placeholder="Quoi de neuf aujourd'hui ?" className="flex-1 bg-transparent border-none focus:outline-none text-white placeholder-gray-500" readOnly={readOnly} />
-            {!readOnly && <ImageIcon size={20} className="text-white cursor-pointer hover:text-gray-300" onClick={onUpdate ? handleAddPost : undefined}/>}
+            {!readOnly && <ImageIcon size={20} className="text-gray-400 cursor-pointer hover:text-white" onClick={onUpdate ? handleAddPost : undefined}/>}
         </div>
 
         {/* Le Fil des Posts */}
@@ -599,7 +503,7 @@ export const SocialWallBlock: React.FC<BlockProps> = ({ content, theme, onUpdate
             readOnly={readOnly}
             className="space-y-8"
             renderItem={(post, i) => (
-                <div key={i} className={`bg-black/60 backdrop-blur-md border border-white/10 ${radius} overflow-hidden hover:border-white/30 transition duration-500`}>
+                <div key={i} className={`bg-black/40 backdrop-blur-md border border-white/10 ${radius} overflow-hidden hover:border-${theme.primaryColor.split('-')[1] || 'gold'}-500/50 transition duration-500`}>
                     
                     {/* Header du Post */}
                     <div className="p-4 flex justify-between items-center">
@@ -614,7 +518,7 @@ export const SocialWallBlock: React.FC<BlockProps> = ({ content, theme, onUpdate
                                 <p className="text-[10px] text-gray-400">{post.timeAgo}</p>
                             </div>
                         </div>
-                        <MoreHorizontal size={20} className="text-white cursor-pointer"/>
+                        <MoreHorizontal size={20} className="text-gray-500 cursor-pointer"/>
                     </div>
 
                     {/* Contenu */}
@@ -630,14 +534,14 @@ export const SocialWallBlock: React.FC<BlockProps> = ({ content, theme, onUpdate
                     {/* Actions (Like/Comment) */}
                     <div className="p-4 flex items-center justify-between border-t border-white/5">
                         <div className="flex gap-6">
-                            <button className="flex items-center gap-2 text-white hover:text-red-500 transition group">
-                                <Heart size={18} className="text-white group-hover:fill-red-500"/> <span className="text-xs font-bold">{post.likes}</span>
+                            <button className="flex items-center gap-2 text-gray-400 hover:text-red-500 transition group">
+                                <Heart size={18} className="group-hover:fill-red-500"/> <span className="text-xs">{post.likes}</span>
                             </button>
-                            <button className="flex items-center gap-2 text-white hover:text-blue-400 transition">
-                                <MessageCircle size={18} className="text-white"/> <span className="text-xs font-bold">{post.comments}</span>
+                            <button className="flex items-center gap-2 text-gray-400 hover:text-blue-400 transition">
+                                <MessageCircle size={18}/> <span className="text-xs">{post.comments}</span>
                             </button>
                         </div>
-                        <button className="text-white hover:text-gray-300"><Share2 size={18}/></button>
+                        <button className="text-gray-400 hover:text-white"><Share2 size={18}/></button>
                     </div>
                 </div>
             )}
@@ -654,7 +558,7 @@ export const SocialWallBlock: React.FC<BlockProps> = ({ content, theme, onUpdate
 };
 
 
-// --- 7. CONTACT BLOCK (AVEC FORMULAIRE EXTERNE) ---
+// --- 7. CONTACT BLOCK (TRANSFORMER) ---
 export const ContactBlock: React.FC<BlockProps> = ({ content, theme, onUpdate, readOnly = false }) => {
   const { radius, font } = getThemeClasses(theme);
 
@@ -665,12 +569,11 @@ export const ContactBlock: React.FC<BlockProps> = ({ content, theme, onUpdate, r
   // Déterminer l'icône selon le type d'action choisi
   const getActionIcon = () => {
     switch(content.actionType) {
-        case 'whatsapp': return <MessageCircle size={20} className="text-black" />;
-        case 'email': return <Mail size={20} className="text-black" />;
-        case 'call': return <Phone size={20} className="text-black" />;
-        case 'calendar': return <Calendar size={20} className="text-black" />;
-        case 'form': return <ExternalLink size={20} className="text-black" />;
-        default: return <ExternalLink size={20} className="text-black" />;
+        case 'whatsapp': return <MessageCircle size={20} />;
+        case 'email': return <Mail size={20} />;
+        case 'call': return <Phone size={20} />;
+        case 'calendar': return <Calendar size={20} />;
+        default: return <ExternalLink size={20} />;
     }
   };
 
@@ -680,13 +583,12 @@ export const ContactBlock: React.FC<BlockProps> = ({ content, theme, onUpdate, r
          case 'whatsapp': return `https://wa.me/${content.actionValue?.replace(/\D/g,'')}?text=Bonjour...`;
          case 'email': return `mailto:${content.actionValue}`;
          case 'call': return `tel:${content.actionValue}`;
-         case 'form': return content.actionValue || '#';
          default: return content.actionValue || '#';
      }
   };
 
   return (
-    <div className={`py-24 relative overflow-hidden bg-black/80 backdrop-blur-lg ${font} z-10`}>
+    <div className={`py-24 relative overflow-hidden bg-black/50 backdrop-blur-lg ${font} z-10`}>
       {/* Fond décoratif subtil */}
       <div className={`absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-lg h-1 bg-gradient-to-r from-transparent via-${theme.primaryColor.split('-')[1] || 'gold'}-500 to-transparent opacity-50`}></div>
       
@@ -694,9 +596,9 @@ export const ContactBlock: React.FC<BlockProps> = ({ content, theme, onUpdate, r
         
         <EditableText
             tag="h2"
-            className="text-4xl md:text-5xl font-bold text-white mb-6 leading-tight"
-            value={content.title || "Contactez-nous"}
-            onChange={(val) => handleChange('title', val)}
+            className="text-4xl md:text-5xl font-bold text-white mb-6 leading-tight relative z-50 cursor-text pointer-events-auto"
+            value={content.title || 'Titre de la section'}
+            onChange={(val) => { if (onUpdate) onUpdate({ ...content, title: val }) }}
             readOnly={readOnly}
         />
         
@@ -731,22 +633,22 @@ export const ContactBlock: React.FC<BlockProps> = ({ content, theme, onUpdate, r
         </a>
 
         {/* Infos Secondaires (Adresse, etc.) */}
-        <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-6 text-sm text-white border-t border-white/10 pt-10">
+        <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-6 text-sm text-gray-400 border-t border-white/10 pt-10">
             {content.showEmail !== false && (
                 <div className="flex flex-col items-center gap-2">
-                    <Mail className={theme.primaryColor || "text-white"}/> 
+                    <Mail className={theme.primaryColor}/> 
                     <EditableText value={content.email} onChange={(val) => handleChange('email', val)} readOnly={readOnly} />
                 </div>
             )}
             {content.showPhone !== false && (
                 <div className="flex flex-col items-center gap-2">
-                    <Phone className={theme.primaryColor || "text-white"}/> 
+                    <Phone className={theme.primaryColor}/> 
                     <EditableText value={content.phone} onChange={(val) => handleChange('phone', val)} readOnly={readOnly} />
                 </div>
             )}
             {content.showAddress !== false && (
                 <div className="flex flex-col items-center gap-2">
-                    <MapPin className={theme.primaryColor || "text-white"}/> 
+                    <MapPin className={theme.primaryColor}/> 
                     <EditableText value={content.address} onChange={(val) => handleChange('address', val)} readOnly={readOnly} />
                 </div>
             )}

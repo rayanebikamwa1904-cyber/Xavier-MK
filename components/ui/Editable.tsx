@@ -12,6 +12,17 @@ interface EditableTextProps {
   readOnly?: boolean;
 }
 
+interface EditableTextProps {
+  value: string;
+  onChange?: (val: string) => void;
+  tag?: React.ElementType;
+  className?: string;
+  placeholder?: string;
+  multiline?: boolean;
+  readOnly?: boolean;
+  leadingIcon?: React.ReactNode;
+}
+
 export const EditableText: React.FC<EditableTextProps> = ({ 
   value, 
   onChange, 
@@ -19,7 +30,8 @@ export const EditableText: React.FC<EditableTextProps> = ({
   className = "", 
   placeholder = "Cliquez pour écrire...",
   multiline = false,
-  readOnly = false
+  readOnly = false,
+  leadingIcon = null
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [tempValue, setTempValue] = useState(value);
@@ -42,7 +54,7 @@ export const EditableText: React.FC<EditableTextProps> = ({
 
   // MODE LECTURE SEULE (PUBLIC / ARÈNE)
   if (readOnly) {
-    return <Tag className={className}>{value}</Tag>;
+    return <Tag className={className}>{leadingIcon}{value}</Tag>;
   }
 
   const canEdit = !!onChange;
@@ -86,7 +98,7 @@ export const EditableText: React.FC<EditableTextProps> = ({
         }}
         className={`${className} ${canEdit ? 'cursor-text hover:bg-white/10 hover:outline hover:outline-1 hover:outline-dashed hover:outline-gold-400/50 rounded transition relative group' : ''}`}
     >
-      {value || <span className="opacity-50 italic">{placeholder}</span>}
+      {leadingIcon}{value || <span className="opacity-50 italic">{placeholder}</span>}
       {canEdit && (
         <span className="absolute -top-3 -right-3 opacity-0 group-hover:opacity-100 bg-gold-500 text-black p-1 rounded-full text-[10px] pointer-events-none transition z-50">
           <Edit2 size={10} />

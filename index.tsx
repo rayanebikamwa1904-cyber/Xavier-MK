@@ -1,7 +1,7 @@
 import React from 'react';
-import { ThemeProvider } from './context/ThemeContext';
 import ReactDOM from 'react-dom/client';
 import App from './App';
+import './index.css';
 import { AuthProvider } from './context/AuthContext';
 import { HelmetProvider } from 'react-helmet-async';
 
@@ -15,9 +15,7 @@ root.render(
   <React.StrictMode>
     <HelmetProvider>
       <AuthProvider>
-        <ThemeProvider>
-          <App />
-        </ThemeProvider>
+        <App />
       </AuthProvider>
     </HelmetProvider>
   </React.StrictMode>

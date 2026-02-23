@@ -14,7 +14,7 @@ export interface PortfolioTheme {
 }
 
 export interface PortfolioSection {
-  type: 'hero' | 'services' | 'contact' | 'gallery' | 'bio' | 'experience' | 'social';
+  type: 'hero' | 'services' | 'contact' | 'gallery' | 'bio' | 'experience' | 'social' | 'testimonials';
   content: any;
 }
 
@@ -47,6 +47,12 @@ export interface CreatorProfile {
   phone?: string;
   tags?: string[];
   expiryDate?: string;
+  labels?: any;
+  templateId?: string;
+  googleFormUrl?: string;
+  portfolioTitle?: string;
+  portfolioSlug?: string;
+  layoutType?: string;
 }
 
 export interface ChatMessage {
@@ -63,11 +69,28 @@ export enum AppView {
   LOGIN = 'LOGIN',
   ADMIN = 'ADMIN',
   TERMS = 'TERMS',
-  PROFILE = 'PROFILE',
 }
 
 export interface Testimonial {
   name: string;
   review: string;
   rating: number;
+}
+
+// --- NOUVEAU SYSTÈME DE THÈMES ---
+
+export interface Theme {
+  id: string;
+  name: string;
+  font: string;
+  palette: {
+    background: string;
+    text: string;
+    primary: string;
+    accent: string;
+  };
+}
+
+export interface TemplateConfig {
+  themes: Theme[];
 }
