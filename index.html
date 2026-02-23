@@ -133,5 +133,18 @@
   <body class="bg-black text-white" style="background-color: #000000; color: #ffffff; margin: 0; padding: 0; min-height: 100vh;">
     <div id="root"></div>
   <script type="module" src="/index.tsx"></script>
+<script>
+  window.onerror = function(msg, url, line) {
+    var div = document.createElement('div');
+    div.style.color = 'white';
+    div.style.background = 'red';
+    div.style.padding = '20px';
+    div.style.position = 'fixed';
+    div.style.top = '0';
+    div.style.zIndex = '9999';
+    div.innerHTML = 'ERREUR DETECTÉE : ' + msg + ' (Ligne: ' + line + ')';
+    document.body.appendChild(div);
+  };
+</script>
 </body>
 </html>
