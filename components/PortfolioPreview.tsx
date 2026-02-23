@@ -21,7 +21,7 @@ const getTemplateStyles = (templateId: string) => {
 
 import TestimonialsLego from './TestimonialsLego';
 import ActionBlock from './ActionBlock';
-import HeroBlock from './HeroBlock';
+import HeroBlock from './ui/config/HeroBlock';
 
 const generateWhatsAppLink = (phone: string, itemName: string, type: 'commander' | 'réserver' | 'discuter de', creatorName?: string) => {
   if (!phone) return '#';
