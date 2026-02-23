@@ -12,7 +12,7 @@ import ErrorBoundary from './components/ui/ErrorBoundary';
 import SEO from './components/SEO';
 import { ArrowLeft, Sparkles, Search, Share2 } from 'lucide-react';
 import GlassCard from './components/ui/GlassCard';
-import GoldButton from './components/ui/GoldButton';
+
 import { useAuth } from './context/AuthContext';
 import { collection, query, where, onSnapshot, doc, getDoc, getDocs } from 'firebase/firestore';
 import { db } from './lib/firebase';
@@ -34,9 +34,9 @@ const Landing = ({ setView, creators, setSelectedCreator }) => (
           <button onClick={() => setView(AppView.WIZARD)} className="hover:text-gold-400 transition">Créer</button>
           <button onClick={() => setView(AppView.TERMS)} className="hover:text-gold-400 transition">CGU</button>
         </div>
-        <GoldButton className="text-sm px-6 py-2" onClick={() => setView(AppView.WIZARD)}>
-          Rejoindre l'Arène
-        </GoldButton>
+        <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={() => setView(AppView.WIZARD)}>
+          Continuer
+        </button>
       </GlassCard>
     </nav>
 
@@ -103,9 +103,9 @@ const Landing = ({ setView, creators, setSelectedCreator }) => (
       ) : (
         <div className="text-center py-20 px-6 bg-white/5 rounded-[3rem] border border-dashed border-white/10 text-gray-500">
           <p className="mb-4 text-lg">L'Arène attend ses premiers champions.</p>
-          <GoldButton className="text-sm px-6 py-2" onClick={() => setView(AppView.WIZARD)}>
-            Devenir le Premier
-          </GoldButton>
+          <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={() => setView(AppView.WIZARD)}>
+            Continuer
+          </button>
         </div>
       )}
     </section>
