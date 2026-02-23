@@ -238,6 +238,7 @@ const App: React.FC = () => {
     alert('Lien Pro copié !');
   }
 
+  console.log("App render - Auth status:", loading);
   if (loading) return <SplashScreen />;
 
   if (isolatedCreator) {
