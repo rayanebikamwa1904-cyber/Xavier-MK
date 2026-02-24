@@ -127,6 +127,7 @@ const App: React.FC = () => {
 
     if (pathname && !internalRoutes.includes(pathname)) {
       const fetchCreatorBySlug = async () => {
+      try {
         const usersRef = collection(db, 'users');
         const q = query(usersRef, where('portfolioSlug', '==', pathname));
         const querySnapshot = await getDocs(q);
@@ -170,8 +171,13 @@ const App: React.FC = () => {
           setView(AppView.LANDING);
         }
         setLoading(false);
-      };
-      fetchCreatorBySlug();
+      } catch (error) {
+        console.error("Error fetching creator by slug:", error);
+        setView(AppView.LANDING);
+        setLoading(false);
+      }
+    };
+    fetchCreatorBySlug();
     } else {
       const q = query(collection(db, "users"), where("status", "==", "active"));
       const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -238,6 +244,7 @@ const App: React.FC = () => {
     alert('Lien Pro copié !');
   }
 
+  console.log("App render - Auth status:", loading);
   if (loading) return <SplashScreen />;
 
   if (isolatedCreator) {
@@ -293,10 +300,31 @@ const App: React.FC = () => {
     case AppView.TERMS:
       return <TermsPage onNavigate={setView} />;
     case AppView.ARENA:
-      // Always render ArenaPage by default. If a creator is selected, PortfolioPreview will be shown within ArenaPage.
-      return <ArenaPage onSelectCreator={setSelectedCreator} onNavigate={setView} selectedCreator={selectedCreator} />;
+      if (selectedCreator) {
+        return (
+          <div className="min-h-screen bg-black relative">
+            <SEO 
+              title={`${selectedCreator?.name || "Prestataire"} | Portfolio Officiel`}
+              description={`Découvrez l'univers de ${selectedCreator?.name || "ce prestataire"}, expert en ${selectedCreator?.category || "son domaine"}. Visitez son Empire numérique sur My Folio-Tag.`}
+              image={selectedCreator?.portfolio?.sections?.[0]?.content?.backgroundImage || selectedCreator?.portfolio?.sections?.[1]?.content?.image || "https://images.unsplash.com/photo-1557683316-973673baf926?auto=format&fit=crop&w=800&q=80"}
+              type="profile"
+            />
+            <ErrorBoundary>
+              <PortfolioPreview 
+                config={selectedCreator.portfolio} 
+                phone={selectedCreator.phone}
+                creatorId={selectedCreator.id}
+                expiryDate={selectedCreator.expiryDate}
+                onBack={() => setSelectedCreator(null)}
+                creatorName={selectedCreator.name}
+                creatorData={selectedCreator}
+              />
+            </ErrorBoundary>
+          </div>
+        );
+      }
+      return <ArenaPage onSelectCreator={setSelectedCreator} onNavigate={setView} />;
     default:
-      // Only show loading screen if 'loading' is true and no specific view is set.
       return <div className="min-h-screen bg-black flex items-center justify-center text-[#FFD700]">Chargement de l'Empire...</div>;
   }
 };
