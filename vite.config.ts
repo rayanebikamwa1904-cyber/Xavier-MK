@@ -8,7 +8,6 @@ import { VitePWA } from 'vite-plugin-pwa';
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
     return {
-        base: './',
       server: {
         port: 3000,
         host: '0.0.0.0',
@@ -57,14 +56,19 @@ export default defineConfig(({ mode }) => {
         }
       },
       build: {
-        minify: 'terser',
         rollupOptions: {
           output: {
-            manualChunks: {
-              vendor: ['react', 'react-dom', 'firebase/app', 'firebase/firestore', 'firebase/auth'],
+            manualChunks(id) {
+              if (id.includes('node_modules')) {
+                if (id.includes('react') || id.includes('firebase')) {
+                  return 'vendor-react-firebase';
+                }
+                return 'vendor';
+              }
             },
           },
         },
+        minify: 'terser',
       },
     };
 });
