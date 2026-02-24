@@ -127,7 +127,6 @@ const App: React.FC = () => {
 
     if (pathname && !internalRoutes.includes(pathname)) {
       const fetchCreatorBySlug = async () => {
-      try {
         const usersRef = collection(db, 'users');
         const q = query(usersRef, where('portfolioSlug', '==', pathname));
         const querySnapshot = await getDocs(q);
@@ -171,13 +170,8 @@ const App: React.FC = () => {
           setView(AppView.LANDING);
         }
         setLoading(false);
-      } catch (error) {
-        console.error("Error fetching creator by slug:", error);
-        setView(AppView.LANDING);
-        setLoading(false);
-      }
-    };
-    fetchCreatorBySlug();
+      };
+      fetchCreatorBySlug();
     } else {
       const q = query(collection(db, "users"), where("status", "==", "active"));
       const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -244,7 +238,6 @@ const App: React.FC = () => {
     alert('Lien Pro copié !');
   }
 
-  console.log("App render - Auth status:", loading);
   if (loading) return <SplashScreen />;
 
   if (isolatedCreator) {
