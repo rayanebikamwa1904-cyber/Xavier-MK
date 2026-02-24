@@ -60,10 +60,12 @@ export default defineConfig(({ mode }) => {
           output: {
             manualChunks(id) {
               if (id.includes('node_modules')) {
-                if (id.includes('react') || id.includes('firebase')) {
-                  return 'vendor-react-firebase';
+                if (id.includes('react')) {
+                  return 'react-vendor';
                 }
-                return 'vendor';
+                if (id.includes('firebase')) {
+                  return 'firebase-vendor';
+                }
               }
             },
           },
