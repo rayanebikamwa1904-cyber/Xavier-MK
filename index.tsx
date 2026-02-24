@@ -1,3 +1,11 @@
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then((registrations) => {
+    for (let registration of registrations) {
+      registration.unregister();
+    }
+  });
+}
+
 window.addEventListener('unhandledrejection', (event) => {
   if (event.reason && (event.reason.name === 'AbortError' || event.reason === 'The user aborted a request.')) {
     console.warn('Ignored harmless AbortError');
