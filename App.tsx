@@ -8,7 +8,7 @@ import RegisterPage from './pages/Register';
 import LoginPage from './pages/Login';
 import AdminDashboard from './pages/admin';
 import PortfolioPreview from './components/PortfolioPreview';
-import { ErrorBoundary } from './components/ui/ErrorBoundary';
+import ErrorBoundary from './components/ui/ErrorBoundary';
 import SEO from './components/SEO';
 import { ArrowLeft, Sparkles, Search, Share2 } from 'lucide-react';
 import GlassCard from './components/ui/GlassCard';
@@ -125,58 +125,48 @@ const App: React.FC = () => {
     const pathname = window.location.pathname.slice(1);
     const internalRoutes = ['login', 'register', 'admin', 'terms', 'wizard'];
 
-    if (internalRoutes.includes(pathname)) {
-      setView(pathname.toUpperCase() as AppView);
-      setLoading(false);
-    }
-
     if (pathname && !internalRoutes.includes(pathname)) {
       const fetchCreatorBySlug = async () => {
-        try {
-          const usersRef = collection(db, 'users');
-          const q = query(usersRef, where('portfolioSlug', '==', pathname));
-          const querySnapshot = await getDocs(q);
-  
-          if (!querySnapshot.empty) {
-            const creatorDoc = querySnapshot.docs[0];
-            const docData = creatorDoc.data();
-            const finalData: any = { ...DEFAULT_CREATOR_DATA, ...docData };
-  
-            const sections = [
-                { type: 'hero', content: { title: finalData.name, subtitle: finalData.profession, backgroundImage: finalData.coverImage, buttonText: "Découvrir" } },
-                { type: 'bio', content: { image: finalData.profileImage, name: finalData.name, description: finalData.bio, stats: { years: finalData.yearsOfExperience || 1, projects: finalData.reviewCount || 0 } } },
-                { type: 'services', content: { items: finalData.catalog || [] } },
-                { type: 'gallery', content: { images: finalData.projects?.map((p: any) => p.image).filter(Boolean) || [] } },
-                { type: 'contact', content: { address: "Kinshasa, Gombe", actionValue: finalData.whatsapp, phone: finalData.phone, email: finalData.email } },
-                { type: 'social', content: { userAvatar: finalData.profileImage, posts: finalData.posts || [] } }
-            ];
-            const joinedAtTimestamp = (finalData.createdAt && typeof finalData.createdAt.toDate === 'function')
-              ? finalData.createdAt.toDate().toISOString()
-              : new Date().toISOString();
-  
-            setIsolatedCreator({
-              id: creatorDoc.id,
-              name: finalData.name || "Artiste",
-              category: finalData.profession || "Créatif",
-              rating: finalData.rating || 5,
-              reviewCount: finalData.reviewCount || 0,
-              verified: finalData.isVerified || false,
-              joinedAt: joinedAtTimestamp,
-              location: finalData.location || { commune: '', address: '' },
-              phone: finalData.phone || "",
-              tags: finalData.tags || [],
-              expiryDate: finalData.expiryDate,
-              portfolioTitle: finalData.portfolioTitle,
-              labels: finalData.labels,
-              templateId: finalData.templateId,
-              googleFormUrl: finalData.googleFormUrl,
-              portfolio: { theme: { primaryColor: 'text-gold-400', style: finalData.themeStyle || 'luxe' }, sections: sections, layoutType: finalData.layoutType || 'GALLERY' }
-            } as CreatorProfile & { portfolioTitle?: string });
-          } else {
-            setView(AppView.LANDING);
-          }
-        } catch (error) {
-          console.error("Error fetching creator:", error);
+        const usersRef = collection(db, 'users');
+        const q = query(usersRef, where('portfolioSlug', '==', pathname));
+        const querySnapshot = await getDocs(q);
+
+        if (!querySnapshot.empty) {
+          const creatorDoc = querySnapshot.docs[0];
+          const docData = creatorDoc.data();
+          const finalData: any = { ...DEFAULT_CREATOR_DATA, ...docData };
+
+          const sections = [
+              { type: 'hero', content: { title: finalData.name, subtitle: finalData.profession, backgroundImage: finalData.coverImage, buttonText: "Découvrir" } },
+              { type: 'bio', content: { image: finalData.profileImage, name: finalData.name, description: finalData.bio, stats: { years: finalData.yearsOfExperience || 1, projects: finalData.reviewCount || 0 } } },
+              { type: 'services', content: { items: finalData.catalog || [] } },
+              { type: 'gallery', content: { images: finalData.projects?.map((p: any) => p.image).filter(Boolean) || [] } },
+              { type: 'contact', content: { address: "Kinshasa, Gombe", actionValue: finalData.whatsapp, phone: finalData.phone, email: finalData.email } },
+              { type: 'social', content: { userAvatar: finalData.profileImage, posts: finalData.posts || [] } }
+          ];
+          const joinedAtTimestamp = (finalData.createdAt && typeof finalData.createdAt.toDate === 'function')
+            ? finalData.createdAt.toDate().toISOString()
+            : new Date().toISOString();
+
+          setIsolatedCreator({
+            id: creatorDoc.id,
+            name: finalData.name || "Artiste",
+            category: finalData.profession || "Créatif",
+            rating: finalData.rating || 5,
+            reviewCount: finalData.reviewCount || 0,
+            verified: finalData.isVerified || false,
+            joinedAt: joinedAtTimestamp,
+            location: finalData.location || { commune: '', address: '' },
+            phone: finalData.phone || "",
+            tags: finalData.tags || [],
+            expiryDate: finalData.expiryDate,
+            portfolioTitle: finalData.portfolioTitle,
+            labels: finalData.labels,
+            templateId: finalData.templateId,
+            googleFormUrl: finalData.googleFormUrl,
+            portfolio: { theme: { primaryColor: 'text-gold-400', style: finalData.themeStyle || 'luxe' }, sections: sections, layoutType: finalData.layoutType || 'GALLERY' }
+          } as CreatorProfile & { portfolioTitle?: string });
+        } else {
           setView(AppView.LANDING);
         }
         setLoading(false);
@@ -225,9 +215,6 @@ const App: React.FC = () => {
         liveCreators.sort((a, b) => new Date(b.joinedAt).getTime() - new Date(a.joinedAt).getTime());
         setCreators(liveCreators);
         setLoading(false);
-      }, (error) => {
-        console.error("Error in snapshot listener:", error);
-        setLoading(false);
       });
       return () => unsubscribe && unsubscribe();
     }
@@ -252,9 +239,7 @@ const App: React.FC = () => {
   }
 
   console.log("App render - Auth status:", loading);
-  // if (loading) return <SplashScreen />; // Removed for Public-First Routing
-
-  return <div style={{color: 'white', background: 'blue', padding: '50px', zIndex: 9999, position: 'fixed', top: 0, left: 0, width: '100%', height: '100%'}}>L'ARENE EST EN VIE</div>;
+  if (loading) return <SplashScreen />;
 
   if (isolatedCreator) {
     const hero = isolatedCreator?.portfolio?.sections?.find(s => s.type === 'hero')?.content || {};
