@@ -254,6 +254,8 @@ const App: React.FC = () => {
   console.log("App render - Auth status:", loading);
   // if (loading) return <SplashScreen />; // Removed for Public-First Routing
 
+  return <div style={{color: 'white', background: 'blue', padding: '50px', zIndex: 9999, position: 'fixed', top: 0, left: 0, width: '100%', height: '100%'}}>L'ARENE EST EN VIE</div>;
+
   if (isolatedCreator) {
     const hero = isolatedCreator?.portfolio?.sections?.find(s => s.type === 'hero')?.content || {};
     const bio = isolatedCreator?.portfolio?.sections?.find(s => s.type === 'bio')?.content || {};
