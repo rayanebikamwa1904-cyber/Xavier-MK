@@ -1,7 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import './index.css'; // La ligne vitale pour éviter l'écran noir
 import App from './App';
-import './index.css';
+import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider } from './context/AuthContext';
 import { HelmetProvider } from 'react-helmet-async';
 
@@ -15,7 +16,9 @@ root.render(
   <React.StrictMode>
     <HelmetProvider>
       <AuthProvider>
-        <App />
+        <ThemeProvider>
+          <App />
+        </ThemeProvider>
       </AuthProvider>
     </HelmetProvider>
   </React.StrictMode>
