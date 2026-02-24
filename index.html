@@ -4,10 +4,134 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>My Folio-Tag | L'Arène des Créatifs</title>
-
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+              serif: ['Playfair Display', 'serif'],
+              mono: ['Space Mono', 'monospace'],
+              geo: ['Montserrat', 'sans-serif'],
+              impact: ['Oswald', 'sans-serif'],
+              hand: ['Great Vibes', 'cursive'],
+            },
+            colors: {
+              gold: {
+                400: '#FACC15',
+                500: '#EAB308',
+                600: '#CA8A04',
+              },
+              glass: {
+                light: 'rgba(255, 255, 255, 0.05)',
+                medium: 'rgba(255, 255, 255, 0.1)',
+                border: 'rgba(255, 255, 255, 0.15)',
+              }
+            },
+            backgroundImage: {
+              'majestic-gradient': 'linear-gradient(to bottom right, #000000, #1a1a1a)',
+              'gold-shine': 'linear-gradient(45deg, #FFD700, #FDB931, #FFD700)',
+            },
+            boxShadow: {
+              'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
+              'glow': '0 0 15px rgba(250, 204, 21, 0.5)',
+            },
+            animation: {
+              'float': 'float 6s ease-in-out infinite',
+              'fade-in-up': 'fadeInUp 0.8s ease-out forwards',
+              'fade-in': 'fadeIn 0.5s ease-out forwards',
+            },
+            keyframes: {
+              float: {
+                '0%, 100%': { transform: 'translateY(0)' },
+                '50%': { transform: 'translateY(-20px)' },
+              },
+              fadeInUp: {
+                '0%': { opacity: '0', transform: 'translateY(20px)' },
+                '100%': { opacity: '1', transform: 'translateY(0)' },
+              },
+              fadeIn: {
+                '0%': { opacity: '0' },
+                '100%': { opacity: '1' },
+              }
+            }
+          },
+        },
+      }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Playfair+Display:wght@400;700&family=Space+Mono:wght@400;700&family=Montserrat:wght@400;600;800&family=Oswald:wght@400;700&family=Great+Vibes&display=swap" rel="stylesheet">
+    <style>
+      /* FORCE DARK THEME GLOBALLY */
+      :root {
+        color-scheme: dark;
+        --color-gold-400: #FACC15;
+        --color-gold-500: #EAB308;
+        --color-gold-600: #CA8A04;
+      }
+      body { 
+        font-family: 'Inter', sans-serif; 
+        background-color: #000000 !important; 
+        color: #ffffff !important;
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+      }
+      .custom-scrollbar::-webkit-scrollbar {
+          width: 6px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-track {
+          background: #111;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #333;
+          border-radius: 3px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #555;
+      }
+      @media print {
+        body * {
+          visibility: hidden;
+        }
+        #portfolio-preview, #portfolio-preview * {
+          visibility: visible;
+        }
+        #portfolio-preview {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 100% !important;
+          max-width: 100% !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          border: none !important;
+          box-shadow: none !important;
+          overflow: visible !important;
+          border-radius: 0 !important;
+        }
+        /* Hide scrollbars during print */
+        ::-webkit-scrollbar {
+          display: none;
+        }
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://esm.sh/react@^19.2.4/",
+    "react": "https://esm.sh/react@^19.2.4",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "lucide-react": "https://esm.sh/lucide-react@^0.572.0",
+    "@google/genai": "https://esm.sh/@google/genai@^1.41.0",
+    "firebase/": "https://esm.sh/firebase@^12.9.0/"
+  }
+}
+</script>
 </head>
   <body class="bg-black text-white" style="background-color: #000000; color: #ffffff; margin: 0; padding: 0; min-height: 100vh;">
     <div id="root"></div>
-  <script type="module" src="/index.tsx"></script>
+  <script type="module" src="/src/index.tsx"></script>
 </body>
 </html>
