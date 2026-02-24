@@ -1,3 +1,10 @@
+window.addEventListener('unhandledrejection', (event) => {
+  if (event.reason && (event.reason.name === 'AbortError' || event.reason === 'The user aborted a request.')) {
+    console.warn('Ignored harmless AbortError');
+    event.preventDefault(); // Empêche le crash fatal
+  }
+});
+
 window.onerror = (msg) => alert(msg);
 
 import React from 'react';

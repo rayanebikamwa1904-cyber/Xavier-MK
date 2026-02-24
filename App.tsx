@@ -2,17 +2,17 @@ import React, { useState, useEffect } from 'react';
 import SplashScreen from './components/SplashScreen';
 import TermsPage from './pages/Terms';
 import { AppView, CreatorProfile, TemplateConfig } from './types';
-import Wizard from './pages/Wizard.tsx';
-import ArenaPage from './pages/Arena.tsx';
-import RegisterPage from './pages/Register.tsx';
-import LoginPage from './pages/Login.tsx';
-import AdminDashboard from './pages/admin.tsx';
+import Wizard from './pages/Wizard';
+import ArenaPage from './pages/Arena';
+import RegisterPage from './pages/Register';
+import LoginPage from './pages/Login';
+import AdminDashboard from './pages/admin';
 import PortfolioPreview from './components/PortfolioPreview';
-import ErrorBoundary from './components/ui/ErrorBoundary';
+import { ErrorBoundary } from './components/ui/ErrorBoundary';
 import SEO from './components/SEO';
 import { ArrowLeft, Sparkles, Search, Share2 } from 'lucide-react';
 import GlassCard from './components/ui/GlassCard';
-
+import GoldButton from './components/ui/GoldButton';
 import { useAuth } from './context/AuthContext';
 import { collection, query, where, onSnapshot, doc, getDoc, getDocs } from 'firebase/firestore';
 import { db } from './lib/firebase';
@@ -34,9 +34,9 @@ const Landing = ({ setView, creators, setSelectedCreator }) => (
           <button onClick={() => setView(AppView.WIZARD)} className="hover:text-gold-400 transition">Créer</button>
           <button onClick={() => setView(AppView.TERMS)} className="hover:text-gold-400 transition">CGU</button>
         </div>
-        <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={() => setView(AppView.WIZARD)}>
-          Continuer
-        </button>
+        <GoldButton className="text-sm px-6 py-2" onClick={() => setView(AppView.WIZARD)}>
+          Rejoindre l'Arène
+        </GoldButton>
       </GlassCard>
     </nav>
 
@@ -103,9 +103,9 @@ const Landing = ({ setView, creators, setSelectedCreator }) => (
       ) : (
         <div className="text-center py-20 px-6 bg-white/5 rounded-[3rem] border border-dashed border-white/10 text-gray-500">
           <p className="mb-4 text-lg">L'Arène attend ses premiers champions.</p>
-          <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={() => setView(AppView.WIZARD)}>
-            Continuer
-          </button>
+          <GoldButton className="text-sm px-6 py-2" onClick={() => setView(AppView.WIZARD)}>
+            Devenir le Premier
+          </GoldButton>
         </div>
       )}
     </section>
@@ -125,48 +125,58 @@ const App: React.FC = () => {
     const pathname = window.location.pathname.slice(1);
     const internalRoutes = ['login', 'register', 'admin', 'terms', 'wizard'];
 
+    if (internalRoutes.includes(pathname)) {
+      setView(pathname.toUpperCase() as AppView);
+      setLoading(false);
+    }
+
     if (pathname && !internalRoutes.includes(pathname)) {
       const fetchCreatorBySlug = async () => {
-        const usersRef = collection(db, 'users');
-        const q = query(usersRef, where('portfolioSlug', '==', pathname));
-        const querySnapshot = await getDocs(q);
-
-        if (!querySnapshot.empty) {
-          const creatorDoc = querySnapshot.docs[0];
-          const docData = creatorDoc.data();
-          const finalData: any = { ...DEFAULT_CREATOR_DATA, ...docData };
-
-          const sections = [
-              { type: 'hero', content: { title: finalData.name, subtitle: finalData.profession, backgroundImage: finalData.coverImage, buttonText: "Découvrir" } },
-              { type: 'bio', content: { image: finalData.profileImage, name: finalData.name, description: finalData.bio, stats: { years: finalData.yearsOfExperience || 1, projects: finalData.reviewCount || 0 } } },
-              { type: 'services', content: { items: finalData.catalog || [] } },
-              { type: 'gallery', content: { images: finalData.projects?.map((p: any) => p.image).filter(Boolean) || [] } },
-              { type: 'contact', content: { address: "Kinshasa, Gombe", actionValue: finalData.whatsapp, phone: finalData.phone, email: finalData.email } },
-              { type: 'social', content: { userAvatar: finalData.profileImage, posts: finalData.posts || [] } }
-          ];
-          const joinedAtTimestamp = (finalData.createdAt && typeof finalData.createdAt.toDate === 'function')
-            ? finalData.createdAt.toDate().toISOString()
-            : new Date().toISOString();
-
-          setIsolatedCreator({
-            id: creatorDoc.id,
-            name: finalData.name || "Artiste",
-            category: finalData.profession || "Créatif",
-            rating: finalData.rating || 5,
-            reviewCount: finalData.reviewCount || 0,
-            verified: finalData.isVerified || false,
-            joinedAt: joinedAtTimestamp,
-            location: finalData.location || { commune: '', address: '' },
-            phone: finalData.phone || "",
-            tags: finalData.tags || [],
-            expiryDate: finalData.expiryDate,
-            portfolioTitle: finalData.portfolioTitle,
-            labels: finalData.labels,
-            templateId: finalData.templateId,
-            googleFormUrl: finalData.googleFormUrl,
-            portfolio: { theme: { primaryColor: 'text-gold-400', style: finalData.themeStyle || 'luxe' }, sections: sections, layoutType: finalData.layoutType || 'GALLERY' }
-          } as CreatorProfile & { portfolioTitle?: string });
-        } else {
+        try {
+          const usersRef = collection(db, 'users');
+          const q = query(usersRef, where('portfolioSlug', '==', pathname));
+          const querySnapshot = await getDocs(q);
+  
+          if (!querySnapshot.empty) {
+            const creatorDoc = querySnapshot.docs[0];
+            const docData = creatorDoc.data();
+            const finalData: any = { ...DEFAULT_CREATOR_DATA, ...docData };
+  
+            const sections = [
+                { type: 'hero', content: { title: finalData.name, subtitle: finalData.profession, backgroundImage: finalData.coverImage, buttonText: "Découvrir" } },
+                { type: 'bio', content: { image: finalData.profileImage, name: finalData.name, description: finalData.bio, stats: { years: finalData.yearsOfExperience || 1, projects: finalData.reviewCount || 0 } } },
+                { type: 'services', content: { items: finalData.catalog || [] } },
+                { type: 'gallery', content: { images: finalData.projects?.map((p: any) => p.image).filter(Boolean) || [] } },
+                { type: 'contact', content: { address: "Kinshasa, Gombe", actionValue: finalData.whatsapp, phone: finalData.phone, email: finalData.email } },
+                { type: 'social', content: { userAvatar: finalData.profileImage, posts: finalData.posts || [] } }
+            ];
+            const joinedAtTimestamp = (finalData.createdAt && typeof finalData.createdAt.toDate === 'function')
+              ? finalData.createdAt.toDate().toISOString()
+              : new Date().toISOString();
+  
+            setIsolatedCreator({
+              id: creatorDoc.id,
+              name: finalData.name || "Artiste",
+              category: finalData.profession || "Créatif",
+              rating: finalData.rating || 5,
+              reviewCount: finalData.reviewCount || 0,
+              verified: finalData.isVerified || false,
+              joinedAt: joinedAtTimestamp,
+              location: finalData.location || { commune: '', address: '' },
+              phone: finalData.phone || "",
+              tags: finalData.tags || [],
+              expiryDate: finalData.expiryDate,
+              portfolioTitle: finalData.portfolioTitle,
+              labels: finalData.labels,
+              templateId: finalData.templateId,
+              googleFormUrl: finalData.googleFormUrl,
+              portfolio: { theme: { primaryColor: 'text-gold-400', style: finalData.themeStyle || 'luxe' }, sections: sections, layoutType: finalData.layoutType || 'GALLERY' }
+            } as CreatorProfile & { portfolioTitle?: string });
+          } else {
+            setView(AppView.LANDING);
+          }
+        } catch (error) {
+          console.error("Error fetching creator:", error);
           setView(AppView.LANDING);
         }
         setLoading(false);
@@ -215,6 +225,9 @@ const App: React.FC = () => {
         liveCreators.sort((a, b) => new Date(b.joinedAt).getTime() - new Date(a.joinedAt).getTime());
         setCreators(liveCreators);
         setLoading(false);
+      }, (error) => {
+        console.error("Error in snapshot listener:", error);
+        setLoading(false);
       });
       return () => unsubscribe && unsubscribe();
     }
@@ -239,7 +252,7 @@ const App: React.FC = () => {
   }
 
   console.log("App render - Auth status:", loading);
-  if (loading) return <SplashScreen />;
+  // if (loading) return <SplashScreen />; // Removed for Public-First Routing
 
   if (isolatedCreator) {
     const hero = isolatedCreator?.portfolio?.sections?.find(s => s.type === 'hero')?.content || {};
