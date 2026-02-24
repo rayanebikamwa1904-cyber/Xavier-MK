@@ -656,4 +656,4 @@ export const ContactBlock: React.FC<BlockProps> = ({ content, theme, onUpdate, r
       </div>
     </div>
   );
-};
+}; 
