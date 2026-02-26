@@ -3,19 +3,18 @@ import { useAuth } from '../context/AuthContext';
 import { motion } from 'framer-motion';
 import { db, auth } from '../lib/firebase';
 import { doc, getDoc, updateDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
-import { signOut, updatePassword } from 'firebase/auth';
+import { signOut } from 'firebase/auth';
 import { 
   Sparkles, Send, Star, MapPin, 
   ShoppingBag, Newspaper, CheckCircle, Loader2, LogOut,
   Plus, Trash2, Image as ImageIcon, Flag, ThumbsUp, MessageCircle, 
   User, Briefcase, Edit3, Camera, UploadCloud, X, Phone, Mail, MessageSquareQuote,
   Clock, Building2, CreditCard, Banknote, Smartphone, Copy, AlertTriangle, QrCode, FileText, Lock, Link as LinkIcon, Crown,
-  Monitor, ShieldCheck, KeyRound
+  Monitor, ShieldCheck
 } from 'lucide-react';
 import { AppView, CreatorProfile } from '../types';
 
 import { QRCodeCanvas } from 'qrcode.react';
-import EditableText from '../components/EditableText';
 // @ts-ignore
 import html2pdf from 'html2pdf.js';
 
@@ -41,7 +40,7 @@ export default function Wizard({ onNavigate, platformPrice }: WizardProps) {
   const [selectedModel, setSelectedModel] = useState<string | null>(null);
 
   // --- ÉTATS STUDIO INTERACTIF ---
-  const [activeTab, setActiveTab] = useState<'identity' | 'portfolio' | 'social' | 'catalog' | 'reputation' | 'location' | 'prestige' | 'action' | 'security'>('identity');
+  const [activeTab, setActiveTab] = useState<'identity' | 'portfolio' | 'social' | 'catalog' | 'reputation' | 'location' | 'prestige' | 'action'>('identity');
   const [uploadTarget, setUploadTarget] = useState<'profile' | 'cover' | 'project' | 'post' | 'catalog' | 'paymentProof' | null>(null);
   
   // --- ÉTATS PRESTIGE ---
@@ -56,15 +55,6 @@ export default function Wizard({ onNavigate, platformPrice }: WizardProps) {
   const [linkCopied, setLinkCopied] = useState(false);
   const [isPdfGenerating, setIsPdfGenerating] = useState(false);
   const [paymentProof, setPaymentProof] = useState<string | null>(null);
-  const [content, setContent] = useState<any>({
-    skillsSectionTitle: 'Mes Compétences',
-    experienceSectionTitle: 'Mon Parcours',
-    projectsSectionTitle: 'Mes Réalisations',
-    socialWallSectionTitle: 'Mur Social',
-    catalogSectionTitle: 'Catalogue',
-    testimonialsSectionTitle: 'Témoignages Clients',
-    locationSectionTitle: 'Localisation',
-  });
   const qrRef = useRef<HTMLCanvasElement>(null);
 
   // 1. Identité Visuelle & Contact
@@ -74,14 +64,11 @@ export default function Wizard({ onNavigate, platformPrice }: WizardProps) {
   const [email, setEmail] = useState(""); 
   const [bio, setBio] = useState(""); 
   const [location, setLocation] = useState({ commune: '', address: '' });
-  const [layoutType, setLayoutType] = useState<'GALLERY' | 'CATALOGUE' | 'SERVICES'>('GALLERY');
 
   // 6. Action Royale
   const [googleFormUrl, setGoogleFormUrl] = useState("");
   const [customButtons, setCustomButtons] = useState<{ title: string, link: string }[]>([]);
   const [newCustomButton, setNewCustomButton] = useState({ title: '', link: '' });
-  const [newPassword, setNewPassword] = useState('');
-  const [passwordUpdateStatus, setPasswordUpdateStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
   // --- ÉTATS PREVIEW ---
   const [previewMode, setPreviewMode] = useState<'mobile' | 'desktop'>('mobile');
@@ -117,12 +104,6 @@ export default function Wizard({ onNavigate, platformPrice }: WizardProps) {
     { id: 'executive', name: 'Executive', desc: 'Bleu & Gris - Entreprise & État', color: '#94a3b8', bg: '#1e293b' }
   ];
 
-  const handleContentSave = (field: string, value: string) => {
-    const newContent = { ...content, [field]: value };
-    setContent(newContent);
-    saveToDb('content', newContent);
-  };
-
   // --- INITIALISATION ---
   useEffect(() => {
     if (!loading && !user) {
@@ -149,7 +130,6 @@ export default function Wizard({ onNavigate, platformPrice }: WizardProps) {
         setBio(data.bio || "");
         setLocation(data.location || { commune: '', address: '' });
         if (data.layoutType) setLayoutType(data.layoutType);
-        if (data.content) setContent(data.content);
         if (data.domainRequest) {
           setDesiredDomain(data.domainRequest.name || "");
           setDomainRequestStatus(data.domainRequest.status === 'pending' ? 'sent' : 'none');
@@ -461,20 +441,6 @@ export default function Wizard({ onNavigate, platformPrice }: WizardProps) {
     onNavigate(AppView.ADMIN);
   };
 
-  const handleUpdatePassword = async () => {
-    if (!user || !newPassword) return;
-    try {
-      await updatePassword(user, newPassword);
-      setNewPassword('');
-      setPasswordUpdateStatus('success');
-      setTimeout(() => setPasswordUpdateStatus('idle'), 3000);
-    } catch (error) {
-      console.error("Password update error:", error);
-      setPasswordUpdateStatus('error');
-      setTimeout(() => setPasswordUpdateStatus('idle'), 3000);
-    }
-  };
-
 
   if (loading || !userData) return <div className="h-screen bg-black flex items-center justify-center text-[#FFD700]"><Loader2 className="animate-spin" size={40}/></div>;
 
@@ -554,22 +520,6 @@ export default function Wizard({ onNavigate, platformPrice }: WizardProps) {
   // --- STUDIO INTERACTIF ---
   return (
     <div className="flex h-screen bg-black text-white overflow-hidden font-sans relative">
-        {isImpersonating && (
-          <motion.div 
-            initial={{ y: -100 }}
-            animate={{ y: 0 }}
-            transition={{ type: 'spring', stiffness: 100, damping: 20 }}
-            className="absolute top-0 left-0 right-0 bg-red-600 text-white text-center p-2 z-[100] flex items-center justify-center gap-4 shadow-lg"
-          >
-            <p className="text-sm font-bold flex items-center gap-2"><ShieldCheck size={14}/> SESSION GOD MODE : Vous contrôlez actuellement le compte de {userData?.name}</p>
-            <button 
-              onClick={handleExitGodMode}
-              className="bg-white/20 hover:bg-white/40 text-white text-xs font-bold py-1 px-3 rounded-full"
-            >
-              QUITTER
-            </button>
-          </motion.div>
-        )}
         {isImpersonating && (
           <motion.div 
             initial={{ y: -100 }}
@@ -755,6 +705,40 @@ export default function Wizard({ onNavigate, platformPrice }: WizardProps) {
 
         {/* === SIDEBAR DE COMMANDE === */}
         <div className="w-96 bg-[#0a0a0a] border-r border-white/10 flex flex-col z-20 shadow-2xl">
+            {/* OVERLAY SÉLECTION INITIALE */}
+            {!userData.layoutType && (
+                <div className="absolute inset-0 z-[60] bg-black/90 backdrop-blur-md flex flex-col items-center justify-center p-8 text-center animate-fade-in">
+                    <Sparkles className="text-[#FFD700] mb-6" size={48}/>
+                    <h2 className="text-2xl font-black text-white mb-4 tracking-tighter uppercase">Configuration de l'Empire</h2>
+                    <p className="text-gray-400 text-sm mb-8">Comment souhaitez-vous présenter votre activité ?</p>
+                    <div className="space-y-4 w-full">
+                        {[
+                            { id: 'GALLERY', label: 'Vitrine Visuelle (Photos/Art)', desc: 'Idéal pour photographes, artistes, décorateurs.', icon: <ImageIcon size={20}/> },
+                            { id: 'CATALOGUE', label: 'Catalogue & Prix (E-commerce/Menu)', desc: 'Idéal pour boutiques, restaurants, traiteurs.', icon: <ShoppingBag size={20}/> },
+                            { id: 'SERVICES', label: 'Services & Réservation (Agence/Événement)', desc: 'Idéal pour agences, DJs, consultants.', icon: <Briefcase size={20}/> }
+                        ].map(opt => (
+                            <button 
+                                key={opt.id}
+                                onClick={() => {
+                                    setLayoutType(opt.id as any);
+                                    saveToDb('layoutType', opt.id);
+                                    setUserData({ ...userData, layoutType: opt.id });
+                                }}
+                                className="w-full bg-[#111] border border-white/10 p-4 rounded-2xl flex items-center gap-4 hover:border-[#FFD700] hover:bg-white/5 transition group text-left"
+                            >
+                                <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center text-gray-500 group-hover:text-[#FFD700] transition">
+                                    {opt.icon}
+                                </div>
+                                <div>
+                                    <p className="text-sm font-bold text-white">{opt.label}</p>
+                                    <p className="text-[10px] text-gray-500">{opt.desc}</p>
+                                </div>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
+
             <div className="p-4 border-b border-white/10 flex justify-between items-center">
                 <h2 className="text-xl font-black tracking-tighter text-[#FFD700]">MYFOLIO <span className="text-white text-xs bg-white/10 px-2 py-1 rounded">STUDIO</span></h2>
                 <div className="flex items-center gap-1 bg-black p-1 rounded-lg border border-white/10">
@@ -763,17 +747,40 @@ export default function Wizard({ onNavigate, platformPrice }: WizardProps) {
                 </div>
             </div>
 
+            {/* SÉLECTEUR DE LAYOUT (LEGO) */}
+            <div className="p-4 bg-white/5 border-b border-white/10">
+                <label className="text-[10px] font-black text-gray-500 uppercase mb-3 block tracking-widest">Type de Présentation</label>
+                <div className="grid grid-cols-3 gap-2">
+                    {[
+                        { id: 'GALLERY', icon: <ImageIcon size={14}/>, label: 'Vitrine' },
+                        { id: 'CATALOGUE', icon: <ShoppingBag size={14}/>, label: 'Catalogue' },
+                        { id: 'SERVICES', icon: <Briefcase size={14}/>, label: 'Services' }
+                    ].map(opt => (
+                        <button 
+                            key={opt.id}
+                            onClick={() => {
+                                setLayoutType(opt.id as any);
+                                saveToDb('layoutType', opt.id);
+                            }}
+                            className={`flex flex-col items-center gap-1 p-2 rounded-xl border transition ${layoutType === opt.id ? 'bg-[#FFD700] border-[#FFD700] text-black shadow-lg' : 'bg-black border-white/10 text-gray-500 hover:text-white'}`}
+                        >
+                            {opt.icon}
+                            <span className="text-[9px] font-bold uppercase">{opt.label}</span>
+                        </button>
+                    ))}
+                </div>
+            </div>
+
             {/* NAV TABS */}
-            <div className="flex flex-row overflow-x-auto whitespace-nowrap w-full max-w-full pb-4 scrollbar-hide touch-pan-x">
-                <button onClick={() => setActiveTab('identity')} className={`flex-shrink-0 px-6 py-4 flex justify-center items-center hover:bg-white/5 transition ${activeTab === 'identity' ? 'text-[#FFD700] border-b-2 border-[#FFD700]' : 'text-gray-500'}`} title="Identité"><User size={18}/></button>
-                <button onClick={() => setActiveTab('portfolio')} className={`flex-shrink-0 px-6 py-4 flex justify-center items-center hover:bg-white/5 transition ${activeTab === 'portfolio' ? 'text-[#FFD700] border-b-2 border-[#FFD700]' : 'text-gray-500'}`} title="Portfolio"><Briefcase size={18}/></button>
-                <button onClick={() => setActiveTab('social')} className={`flex-shrink-0 px-6 py-4 flex justify-center items-center hover:bg-white/5 transition ${activeTab === 'social' ? 'text-[#FFD700] border-b-2 border-[#FFD700]' : 'text-gray-500'}`} title="Mur Social"><Newspaper size={18}/></button>
-                <button onClick={() => setActiveTab('catalog')} className={`flex-shrink-0 px-6 py-4 flex justify-center items-center hover:bg-white/5 transition ${activeTab === 'catalog' ? 'text-[#FFD700] border-b-2 border-[#FFD700]' : 'text-gray-500'}`} title="Catalogue"><ShoppingBag size={18}/></button>
-                <button onClick={() => setActiveTab('reputation')} className={`flex-shrink-0 px-6 py-4 flex justify-center items-center hover:bg-white/5 transition ${activeTab === 'reputation' ? 'text-[#FFD700] border-b-2 border-[#FFD700]' : 'text-gray-500'}`} title="Témoignages"><MessageSquareQuote size={18}/></button>
-                <button onClick={() => setActiveTab('location')} className={`flex-shrink-0 px-6 py-4 flex justify-center items-center hover:bg-white/5 transition ${activeTab === 'location' ? 'text-[#FFD700] border-b-2 border-[#FFD700]' : 'text-gray-500'}`} title="Localisation"><MapPin size={18}/></button>
-                <button onClick={() => setActiveTab('prestige')} className={`flex-shrink-0 px-6 py-4 flex justify-center items-center hover:bg-white/5 transition ${activeTab === 'prestige' ? 'text-[#FFD700] border-b-2 border-[#FFD700]' : 'text-gray-500'}`} title="Pack Prestige"><Crown size={18}/></button>
-                <button onClick={() => setActiveTab('action')} className={`flex-shrink-0 px-6 py-4 flex justify-center items-center hover:bg-white/5 transition ${activeTab === 'action' ? 'text-[#FFD700] border-b-2 border-[#FFD700]' : 'text-gray-500'}`} title="Action Royale"><LinkIcon size={18}/></button>
-                <button onClick={() => setActiveTab('security')} className={`flex-shrink-0 px-6 py-4 flex justify-center items-center hover:bg-white/5 transition ${activeTab === 'security' ? 'text-[#FFD700] border-b-2 border-[#FFD700]' : 'text-gray-500'}`} title="Sécurité"><KeyRound size={18}/></button>
+            <div className="flex border-b border-white/10 overflow-x-auto custom-scrollbar">
+                <button onClick={() => setActiveTab('identity')} className={`flex-1 min-w-[50px] py-4 flex justify-center items-center hover:bg-white/5 transition ${activeTab === 'identity' ? 'text-[#FFD700] border-b-2 border-[#FFD700]' : 'text-gray-500'}`} title="Identité"><User size={18}/></button>
+                <button onClick={() => setActiveTab('portfolio')} className={`flex-1 min-w-[50px] py-4 flex justify-center items-center hover:bg-white/5 transition ${activeTab === 'portfolio' ? 'text-[#FFD700] border-b-2 border-[#FFD700]' : 'text-gray-500'}`} title="Portfolio"><Briefcase size={18}/></button>
+                <button onClick={() => setActiveTab('social')} className={`flex-1 min-w-[50px] py-4 flex justify-center items-center hover:bg-white/5 transition ${activeTab === 'social' ? 'text-[#FFD700] border-b-2 border-[#FFD700]' : 'text-gray-500'}`} title="Mur Social"><Newspaper size={18}/></button>
+                <button onClick={() => setActiveTab('catalog')} className={`flex-1 min-w-[50px] py-4 flex justify-center items-center hover:bg-white/5 transition ${activeTab === 'catalog' ? 'text-[#FFD700] border-b-2 border-[#FFD700]' : 'text-gray-500'}`} title="Catalogue"><ShoppingBag size={18}/></button>
+                <button onClick={() => setActiveTab('reputation')} className={`flex-1 min-w-[50px] py-4 flex justify-center items-center hover:bg-white/5 transition ${activeTab === 'reputation' ? 'text-[#FFD700] border-b-2 border-[#FFD700]' : 'text-gray-500'}`} title="Témoignages"><MessageSquareQuote size={18}/></button>
+                <button onClick={() => setActiveTab('location')} className={`flex-1 min-w-[50px] py-4 flex justify-center items-center hover:bg-white/5 transition ${activeTab === 'location' ? 'text-[#FFD700] border-b-2 border-[#FFD700]' : 'text-gray-500'}`} title="Localisation"><MapPin size={18}/></button>
+                <button onClick={() => setActiveTab('prestige')} className={`flex-1 min-w-[50px] py-4 flex justify-center items-center hover:bg-white/5 transition ${activeTab === 'prestige' ? 'text-[#FFD700] border-b-2 border-[#FFD700]' : 'text-gray-500'}`} title="Pack Prestige"><Crown size={18}/></button>
+                <button onClick={() => setActiveTab('action')} className={`flex-1 min-w-[50px] py-4 flex justify-center items-center hover:bg-white/5 transition ${activeTab === 'action' ? 'text-[#FFD700] border-b-2 border-[#FFD700]' : 'text-gray-500'}`} title="Action Royale"><LinkIcon size={18}/></button>
             </div>
 
             <div className="flex-grow overflow-y-auto p-6 space-y-8 custom-scrollbar bg-[#0a0a0a]">
@@ -840,7 +847,7 @@ export default function Wizard({ onNavigate, platformPrice }: WizardProps) {
                     <div className="space-y-8 animate-fade-in">
                         {/* Compétences */}
                         <div className="space-y-3">
-                             <EditableText tag="h2" value={content.skillsSectionTitle} onSave={(newValue) => handleContentSave('skillsSectionTitle', newValue)} className="text-xs font-black text-[#FFD700] uppercase tracking-widest block relative z-50 cursor-text pointer-events-auto" />
+                             <label className="text-xs font-black text-[#FFD700] uppercase tracking-widest block">Mes Compétences</label>
                              <div className="flex gap-2">
                                 <input 
                                     type="text" 
@@ -862,7 +869,7 @@ export default function Wizard({ onNavigate, platformPrice }: WizardProps) {
 
                         {/* Expérience (NEW) */}
                         <div className="space-y-3 pt-4 border-t border-white/10">
-                             <EditableText tag="h2" value={content.experienceSectionTitle} onSave={(newValue) => handleContentSave('experienceSectionTitle', newValue)} className="text-xs font-black text-[#FFD700] uppercase tracking-widest block relative z-50 cursor-text pointer-events-auto" />
+                             <label className="text-xs font-black text-[#FFD700] uppercase tracking-widest block">Mon Parcours</label>
                              <div className="grid grid-cols-2 gap-2">
                                  <input value={newExperience.role} onChange={(e) => setNewExperience({...newExperience, role: e.target.value})} className="bg-black border border-white/20 rounded-lg px-2 py-2 text-sm text-white" placeholder="Rôle (ex: CEO)"/>
                                  <input value={newExperience.year} onChange={(e) => setNewExperience({...newExperience, year: e.target.value})} className="bg-black border border-white/20 rounded-lg px-2 py-2 text-sm text-white" placeholder="Année"/>
@@ -883,7 +890,7 @@ export default function Wizard({ onNavigate, platformPrice }: WizardProps) {
 
                         {/* Projets */}
                         <div className="space-y-3 pt-6 border-t border-white/10">
-                             <EditableText tag="h2" value={content.projectsSectionTitle} onSave={(newValue) => handleContentSave('projectsSectionTitle', newValue)} className="text-xs font-black text-[#FFD700] uppercase tracking-widest block relative z-50 cursor-text pointer-events-auto" />
+                             <label className="text-xs font-black text-[#FFD700] uppercase tracking-widest block">Nouvelle Réalisation</label>
                              
                              <div 
                                 className="w-full h-20 bg-black border border-dashed border-white/20 rounded-lg flex items-center justify-center cursor-pointer hover:border-[#FFD700] hover:bg-white/5 transition mb-2"
@@ -936,7 +943,7 @@ export default function Wizard({ onNavigate, platformPrice }: WizardProps) {
                 {/* 3. TAB SOCIAL */}
                 {activeTab === 'social' && (
                     <div className="space-y-4 animate-fade-in">
-                        <EditableText tag="h3" value={content.socialWallSectionTitle} onSave={(newValue) => handleContentSave('socialWallSectionTitle', newValue)} className="text-xs font-black text-[#FFD700] uppercase tracking-widest relative z-50 cursor-text pointer-events-auto" />
+                        <h3 className="text-xs font-black text-[#FFD700] uppercase tracking-widest">Mur Social</h3>
                         <textarea 
                             value={newPost.text}
                             onChange={(e) => setNewPost({...newPost, text: e.target.value})}
@@ -978,7 +985,7 @@ export default function Wizard({ onNavigate, platformPrice }: WizardProps) {
                 {/* 4. TAB CATALOG */}
                 {activeTab === 'catalog' && (
                     <div className="space-y-4 animate-fade-in">
-                        <EditableText tag="h3" value={content.catalogSectionTitle} onSave={(newValue) => handleContentSave('catalogSectionTitle', newValue)} className="text-xs font-black text-[#FFD700] uppercase tracking-widest relative z-50 cursor-text pointer-events-auto" />
+                        <h3 className="text-xs font-black text-[#FFD700] uppercase tracking-widest">Catalogue</h3>
                         <input 
                             type="text" placeholder="Nom du produit/service"
                             value={newItem.title}
@@ -1033,7 +1040,7 @@ export default function Wizard({ onNavigate, platformPrice }: WizardProps) {
                 {/* 5. TAB REPUTATION (Témoignages) */}
                 {activeTab === 'reputation' && (
                     <div className="space-y-4 animate-fade-in">
-                        <EditableText tag="h3" value={content.testimonialsSectionTitle} onSave={(newValue) => handleContentSave('testimonialsSectionTitle', newValue)} className="text-xs font-black text-[#FFD700] uppercase tracking-widest relative z-50 cursor-text pointer-events-auto" />
+                        <h3 className="text-xs font-black text-[#FFD700] uppercase tracking-widest">Témoignages Clients</h3>
                         <input 
                             type="text" placeholder="Nom du Client"
                             value={newTestimonial.name}
@@ -1079,7 +1086,7 @@ export default function Wizard({ onNavigate, platformPrice }: WizardProps) {
                 {/* 6. TAB LOCATION */}
                 {activeTab === 'location' && (
                     <div className="space-y-6 animate-fade-in">
-                        <EditableText tag="h3" value={content.locationSectionTitle} onSave={(newValue) => handleContentSave('locationSectionTitle', newValue)} className="text-xs font-black text-[#FFD700] uppercase tracking-widest mb-4 relative z-50 cursor-text pointer-events-auto" />
+                        <h3 className="text-xs font-black text-[#FFD700] uppercase tracking-widest mb-4">Localisation</h3>
                         
                         <div className="space-y-5">
                             <div>
@@ -1125,79 +1132,43 @@ export default function Wizard({ onNavigate, platformPrice }: WizardProps) {
                 {/* 8. TAB ACTION ROYALE (NOUVEAU) */}
                 {activeTab === 'action' && (
                     <div className="space-y-6 animate-fade-in">
-                        <h3 className="text-xs font-black text-[#FFD700] uppercase tracking-widest mb-4">Action & Formulaire</h3>
+                        <h3 className="text-xs font-black text-[#FFD700] uppercase tracking-widest">Action Royale</h3>
                         
                         <div>
                             <label className="text-xs font-bold text-gray-400 uppercase mb-2 block">URL de Formulaire (Google Forms, etc.)</label>
-                            <input 
-                                value={googleFormUrl}
-                                onChange={(e) => setGoogleFormUrl(e.target.value)}
-                                onBlur={() => saveToDb('googleFormUrl', googleFormUrl)}
-                                className="w-full bg-black border border-white/20 rounded-lg p-2 text-sm text-white" 
-                                placeholder="https://docs.google.com/forms/..."
-                            />
+                            <div className="relative">
+                                <input 
+                                    type="text"
+                                    value={googleFormUrl}
+                                    onChange={(e) => setGoogleFormUrl(e.target.value)}
+                                    onBlur={() => saveToDb('googleFormUrl', googleFormUrl)}
+                                    placeholder="Collez le lien de votre formulaire ici..."
+                                    className="w-full bg-black border border-white/20 rounded-lg p-2 pl-8 text-sm text-white"
+                                />
+                                <LinkIcon size={14} className="absolute left-2.5 top-2.5 text-gray-500"/>
+                            </div>
                         </div>
 
-                        <div className="border-t border-white/10 my-4"></div>
-
-                        <div>
-                            <label className="text-xs font-bold text-gray-400 uppercase mb-2 block">Boutons Personnalisés</label>
-                            <div className="space-y-2">
-                                {customButtons.map((btn, index) => (
-                                    <div key={index} className="flex items-center gap-2 bg-black p-2 rounded-lg">
-                                        <input type="text" value={btn.title} readOnly className="flex-1 bg-transparent text-white text-sm"/>
-                                        <input type="text" value={btn.link} readOnly className="flex-1 bg-transparent text-gray-500 text-xs"/>
-                                        <button onClick={() => handleDeleteCustomButton(index)} className="p-1 text-red-500 hover:bg-red-500/10 rounded"><Trash2 size={14}/></button>
+                        <div className="pt-4 border-t border-white/10">
+                             <label className="text-xs font-black text-[#FFD700] uppercase tracking-widest block">Boutons Personnalisés</label>
+                             <div className="grid grid-cols-2 gap-2 mt-2">
+                                  <input value={newCustomButton.title} onChange={(e) => setNewCustomButton({...newCustomButton, title: e.target.value})} className="bg-black border border-white/20 rounded-lg px-2 py-2 text-sm text-white" placeholder="Titre du bouton"/>
+                                  <input value={newCustomButton.link} onChange={(e) => setNewCustomButton({...newCustomButton, link: e.target.value})} className="bg-black border border-white/20 rounded-lg px-2 py-2 text-sm text-white" placeholder="Lien URL"/>
+                             </div>
+                             <button onClick={handleAddCustomButton} className="w-full mt-2 bg-white/10 hover:bg-white/20 text-white font-bold py-2 rounded-lg text-sm flex items-center justify-center gap-2 border border-white/10">
+                                 <Plus size={14}/> Ajouter ce bouton
+                             </button>
+                             <div className="space-y-2 mt-2">
+                                {customButtons.map((btn, idx) => (
+                                    <div key={idx} className="flex justify-between items-center bg-white/5 p-2 rounded text-xs">
+                                        <div><span className="font-bold text-white">{btn.title}</span> <span className="text-gray-500">-&gt; {btn.link}</span></div>
+                                        <button onClick={() => handleDeleteCustomButton(idx)} className="text-red-500"><Trash2 size={12}/></button>
                                     </div>
                                 ))}
-                            </div>
-                            <div className="flex items-center gap-2 mt-2">
-                                <input 
-                                    value={newCustomButton.title}
-                                    onChange={(e) => setNewCustomButton({ ...newCustomButton, title: e.target.value })}
-                                    className="flex-1 bg-black border border-white/20 rounded-lg p-2 text-sm text-white" 
-                                    placeholder="Titre du bouton"
-                                />
-                                <input 
-                                    value={newCustomButton.link}
-                                    onChange={(e) => setNewCustomButton({ ...newCustomButton, link: e.target.value })}
-                                    className="flex-1 bg-black border border-white/20 rounded-lg p-2 text-sm text-white" 
-                                    placeholder="https://lien.com"
-                                />
-                                <button onClick={handleAddCustomButton} className="bg-[#FFD700] text-black p-2 rounded-lg"><Plus size={16}/></button>
-                            </div>
+                             </div>
                         </div>
                     </div>
                 )}
-
-                {activeTab === 'security' && (
-                    <div className="space-y-6 animate-fade-in">
-                        <h3 className="text-xs font-black text-[#FFD700] uppercase tracking-widest mb-4">Sécurité du Compte</h3>
-                        <div className="bg-black border border-[#FFD700]/20 p-4 rounded-lg">
-                            <label className="text-xs font-bold text-gray-400 uppercase mb-2 block">Nouveau mot de passe</label>
-                            <div className="flex items-center gap-2">
-                                <input 
-                                    type="password"
-                                    value={newPassword}
-                                    onChange={(e) => setNewPassword(e.target.value)}
-                                    className="w-full bg-[#111] border border-white/20 rounded-lg p-2 text-sm text-white" 
-                                    placeholder="••••••••"
-                                />
-                                <button 
-                                    onClick={handleUpdatePassword}
-                                    className="bg-[#FFD700] text-black font-bold px-4 py-2 rounded-lg hover:bg-[#FDB931] transition disabled:opacity-50"
-                                    disabled={!newPassword}
-                                >
-                                    Mettre à jour
-                                </button>
-                            </div>
-                            {passwordUpdateStatus === 'success' && <p className="text-green-500 text-xs mt-2">Accès sécurisé avec succès !</p>}
-                            {passwordUpdateStatus === 'error' && <p className="text-red-500 text-xs mt-2">Erreur. Veuillez vous reconnecter et réessayer.</p>}
-                        </div>
-                    </div>
-                )}
-
-
 
                 {/* 7. TAB PRESTIGE (NOUVEAU) */}
                 {activeTab === 'prestige' && (

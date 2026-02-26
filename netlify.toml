@@ -1,0 +1,4 @@
+# Edge functions removed to avoid loading issues
+# [[edge_functions]]
+#   function = "og-generator"
+#   path = "/*"

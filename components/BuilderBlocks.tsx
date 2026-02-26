@@ -1,5 +1,5 @@
 import React from 'react';
-import { Mail, Phone, ArrowRight, Star, MapPin, MessageCircle, Heart, Share2, MoreHorizontal, Calendar, ExternalLink, Play, Upload, Image as ImageIcon } from 'lucide-react';
+import { Mail, Phone, ArrowRight, Star, MapPin, MessageCircle, Heart, Share2, MoreHorizontal, Calendar, ExternalLink, Play, Upload, Image as ImageIcon, Clock } from 'lucide-react';
 import { PortfolioTheme } from '../types';
 import { EditableText, EditableImage, EditableList } from './ui/Editable';
 
@@ -8,6 +8,7 @@ interface BlockProps {
   theme: PortfolioTheme;
   onUpdate?: (newContent: any) => void;
   readOnly?: boolean;
+  userType: 'individual' | 'enterprise';
 }
 
 // --- UTILITAIRES DE STYLE ---
@@ -189,11 +190,11 @@ export const ServicesBlock: React.FC<BlockProps> = ({ content, theme, onUpdate, 
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
           <EditableText
-              tag="h2"
-              className="text-4xl md:text-5xl font-bold text-white mb-4 relative z-50 cursor-text pointer-events-auto"
-              value={content.sectionTitle || 'Titre de la section'}
-              onChange={(val) => { if (onUpdate) onUpdate({ ...content, sectionTitle: val }) }}
-              readOnly={readOnly}
+            tag="h2"
+            className="text-4xl md:text-5xl font-bold text-white mb-4"
+            value={content.sectionTitle || "Nos Services"}
+            onChange={(val) => onUpdate && onUpdate({ ...content, sectionTitle: val })}
+            readOnly={readOnly}
           />
           <div className={`h-1 w-24 mx-auto ${theme.primaryColor.replace('text', 'bg')}`}></div>
         </div>
@@ -274,12 +275,12 @@ export const GalleryBlock: React.FC<BlockProps> = ({ content, theme, onUpdate, r
 
   return (
     <div className={`py-20 px-4 bg-black/20 backdrop-blur-sm ${font}`}>
-      <EditableText 
-          tag="h2" 
-          className="text-3xl font-bold text-center mb-10 text-white relative z-50 cursor-text pointer-events-auto" 
-          value={content.sectionTitle || 'Titre de la section'}
-          onChange={(val) => { if (onUpdate) onUpdate({ ...content, sectionTitle: val }) }} 
-          readOnly={readOnly}
+      <EditableText
+        tag="h2"
+        className="text-3xl font-bold text-center mb-10 text-white"
+        value={content.sectionTitle || "Mes Réalisations"}
+        onChange={(val) => onUpdate && onUpdate({ ...content, sectionTitle: val })}
+        readOnly={readOnly}
       />
       <EditableList
         items={content.images}
@@ -309,17 +310,19 @@ export const GalleryBlock: React.FC<BlockProps> = ({ content, theme, onUpdate, r
 };
 
 // --- 4. BIO BLOCK ---
-export const BioBlock: React.FC<BlockProps> = ({ content, theme, onUpdate, readOnly = false }) => {
+export const BioBlock: React.FC<BlockProps> = ({ content, theme, onUpdate, readOnly = false, userType }) => {
   const { radius, font } = getThemeClasses(theme);
 
   const handleChange = (key: string, val: any) => {
     if (onUpdate) onUpdate({ ...content, [key]: val });
   };
 
+  const isEnterprise = userType === 'enterprise';
+
   return (
     <div className={`py-24 px-6 ${font} relative overflow-hidden z-10`}>
-      <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-16">
-        <div className="flex-1 relative w-full max-w-md aspect-[3/4]">
+      <div className={`max-w-6xl mx-auto flex flex-col ${isEnterprise ? 'md:flex-col' : 'md:flex-row'} items-center gap-16`}>
+        <div className={`flex-1 relative w-full ${isEnterprise ? 'max-w-4xl aspect-video' : 'max-w-md aspect-[3/4]'}`}>
            <div className={`absolute -inset-4 bg-gradient-to-br from-${theme.primaryColor.split('-')[1] || 'gold'}-500/20 to-transparent blur-xl rounded-full opacity-50`}></div>
            <div className={`relative h-full w-full overflow-hidden ${radius} border border-white/10 shadow-2xl group`}>
              <EditableImage 
@@ -329,41 +332,64 @@ export const BioBlock: React.FC<BlockProps> = ({ content, theme, onUpdate, readO
                  alt="Portrait" 
                  readOnly={readOnly}
              />
-             <div className="absolute bottom-6 left-6 right-6 p-4 bg-black/60 backdrop-blur-xl border border-white/10 rounded-xl flex items-center gap-4 pointer-events-none">
-                <div className="relative">
-                    <div className="w-3 h-3 bg-green-500 rounded-full animate-ping absolute"></div>
-                    <div className="w-3 h-3 bg-green-500 rounded-full relative"></div>
-                </div>
-                <div>
-                    <p className="text-[10px] text-gray-400 uppercase tracking-widest">Statut</p>
-                    <p className="text-white text-xs font-bold">Disponible pour projets</p>
-                </div>
-             </div>
+             {!isEnterprise && (
+               <div className="absolute bottom-6 left-6 right-6 p-4 bg-black/60 backdrop-blur-xl border border-white/10 rounded-xl flex items-center gap-4 pointer-events-none">
+                  <div className="relative">
+                      <div className="w-3 h-3 bg-green-500 rounded-full animate-ping absolute"></div>
+                      <div className="w-3 h-3 bg-green-500 rounded-full relative"></div>
+                  </div>
+                  <div>
+                      <p className="text-[10px] text-gray-400 uppercase tracking-widest">Statut</p>
+                      <p className="text-white text-xs font-bold">Disponible pour projets</p>
+                  </div>
+               </div>
+             )}
            </div>
         </div>
 
-        <div className="flex-1 space-y-8 text-left">
+        <div className={`flex-1 space-y-8 ${isEnterprise ? 'text-center w-full max-w-4xl' : 'text-left'}`}>
            <EditableText
               tag="h2"
               className="text-4xl md:text-5xl font-bold text-white leading-tight"
               value={content.headline}
               onChange={(val) => handleChange('headline', val)}
-              placeholder="Votre Titre"
+              placeholder={isEnterprise ? 'Qui sommes-nous ?' : 'Votre Titre'}
               readOnly={readOnly}
            />
-           <button className={`w-full flex items-center gap-4 p-4 bg-white/5 border border-white/10 ${radius} hover:bg-white/10 transition group`}>
-              <div className={`w-12 h-12 rounded-full ${theme.primaryColor.replace('text', 'bg')} flex items-center justify-center text-black group-hover:scale-110 transition`}>
-                 <Play fill="black" size={20} className="ml-1"/>
-              </div>
-              <div className="flex-1 text-left">
-                 <p className="text-xs text-gray-400 uppercase mb-1">Message Vocal</p>
-                 <div className="w-full h-1 bg-gray-700 rounded-full overflow-hidden">
-                    <div className="w-1/3 h-full bg-white group-hover:w-2/3 transition-all duration-1000"></div>
-                 </div>
-              </div>
-              <span className="text-xs text-white font-mono">0:45</span>
-           </button>
-           <div className="space-y-4 text-gray-400 text-lg leading-relaxed">
+           
+           {isEnterprise && (
+             <div className="flex flex-wrap justify-center gap-4">
+                {content.foundedYear && (
+                  <div className="px-4 py-2 bg-white/5 border border-white/10 rounded-full flex items-center gap-2">
+                    <Calendar size={14} className={theme.primaryColor}/>
+                    <span className="text-xs font-bold text-white uppercase tracking-widest">Créé en {content.foundedYear}</span>
+                  </div>
+                )}
+                {content.keyFigures && (
+                  <div className="px-4 py-2 bg-white/5 border border-white/10 rounded-full flex items-center gap-2">
+                    <Star size={14} className={theme.primaryColor}/>
+                    <span className="text-xs font-bold text-white uppercase tracking-widest">{content.keyFigures}</span>
+                  </div>
+                )}
+             </div>
+           )}
+
+           {!isEnterprise && (
+             <button className={`w-full flex items-center gap-4 p-4 bg-white/5 border border-white/10 ${radius} hover:bg-white/10 transition group`}>
+                <div className={`w-12 h-12 rounded-full ${theme.primaryColor.replace('text', 'bg')} flex items-center justify-center text-black group-hover:scale-110 transition`}>
+                   <Play fill="black" size={20} className="ml-1"/>
+                </div>
+                <div className="flex-1 text-left">
+                   <p className="text-xs text-gray-400 uppercase mb-1">Message Vocal</p>
+                   <div className="w-full h-1 bg-gray-700 rounded-full overflow-hidden">
+                      <div className="w-1/3 h-full bg-white group-hover:w-2/3 transition-all duration-1000"></div>
+                   </div>
+                </div>
+                <span className="text-xs text-white font-mono">0:45</span>
+             </button>
+           )}
+
+           <div className={`space-y-4 text-gray-400 text-lg leading-relaxed ${isEnterprise ? 'mx-auto' : ''}`}>
              <EditableText
                 tag="div"
                 multiline
@@ -374,15 +400,17 @@ export const BioBlock: React.FC<BlockProps> = ({ content, theme, onUpdate, readO
              />
            </div>
            
-           <div className="font-hand text-5xl text-gray-600 pt-4 opacity-70">
-                <EditableText
-                    tag="div"
-                    value={content.signature || content.name}
-                    onChange={(val) => handleChange('signature', val)}
-                    placeholder="Signature"
-                    readOnly={readOnly}
-                />
-           </div>
+           {!isEnterprise && (
+             <div className="font-hand text-5xl text-gray-600 pt-4 opacity-70">
+                  <EditableText
+                      tag="div"
+                      value={content.signature || content.name}
+                      onChange={(val) => handleChange('signature', val)}
+                      placeholder="Signature"
+                      readOnly={readOnly}
+                  />
+             </div>
+           )}
         </div>
       </div>
     </div>
@@ -413,12 +441,12 @@ export const ExperienceBlock: React.FC<BlockProps> = ({ content, theme, onUpdate
 
   return (
     <div className={`py-24 px-6 bg-black/50 backdrop-blur ${font}`}>
-      <EditableText 
-          tag="h2" 
-          className="text-3xl font-bold text-center text-white mb-16 relative z-50 cursor-text pointer-events-auto" 
-          value={content.sectionTitle || 'Titre de la section'}
-          onChange={(val) => { if (onUpdate) onUpdate({ ...content, sectionTitle: val }) }} 
-          readOnly={readOnly}
+      <EditableText
+        tag="h2"
+        className="text-3xl font-bold text-center text-white mb-16"
+        value={content.sectionTitle || "Mon Parcours"}
+        onChange={(val) => onUpdate && onUpdate({ ...content, sectionTitle: val })}
+        readOnly={readOnly}
       />
       <div className="max-w-3xl mx-auto space-y-8 border-l border-white/10 pl-8 relative">
         <EditableList
@@ -478,14 +506,16 @@ export const SocialWallBlock: React.FC<BlockProps> = ({ content, theme, onUpdate
   return (
     <div className={`py-20 px-4 ${font} relative z-10`}>
       <div className="max-w-2xl mx-auto">
-        <EditableText 
-            tag="h2" 
-            className="text-3xl font-bold text-center text-white mb-10 flex items-center justify-center gap-3 relative z-50 cursor-text pointer-events-auto" 
-            value={content.sectionTitle || 'Titre de la section'}
-            onChange={(val) => { if (onUpdate) onUpdate({ ...content, sectionTitle: val }) }} 
-            readOnly={readOnly}
-            leadingIcon={<span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>}
-        />
+        <div className="flex items-center justify-center gap-3 mb-10">
+            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+            <EditableText
+              tag="h2"
+              className="text-3xl font-bold text-center text-white"
+              value={content.sectionTitle || "Mon Actualité"}
+              onChange={(val) => onUpdate && onUpdate({ ...content, sectionTitle: val })}
+              readOnly={readOnly}
+            />
+        </div>
 
         {/* Zone de "Nouveau Post" */}
         <div className={`mb-10 p-4 bg-white/5 border border-white/10 ${radius} flex gap-4 items-center`}>
@@ -558,8 +588,9 @@ export const SocialWallBlock: React.FC<BlockProps> = ({ content, theme, onUpdate
 };
 
 
+
 // --- 7. CONTACT BLOCK (TRANSFORMER) ---
-export const ContactBlock: React.FC<BlockProps> = ({ content, theme, onUpdate, readOnly = false }) => {
+export const ContactBlock: React.FC<BlockProps> = ({ content, theme, onUpdate, readOnly = false, userType }) => {
   const { radius, font } = getThemeClasses(theme);
 
   const handleChange = (key: string, val: any) => {
@@ -596,9 +627,9 @@ export const ContactBlock: React.FC<BlockProps> = ({ content, theme, onUpdate, r
         
         <EditableText
             tag="h2"
-            className="text-4xl md:text-5xl font-bold text-white mb-6 leading-tight relative z-50 cursor-text pointer-events-auto"
-            value={content.title || 'Titre de la section'}
-            onChange={(val) => { if (onUpdate) onUpdate({ ...content, title: val }) }}
+            className="text-4xl md:text-5xl font-bold text-white mb-6 leading-tight"
+            value={content.title || "Contactez-nous"}
+            onChange={(val) => handleChange('title', val)}
             readOnly={readOnly}
         />
         
@@ -652,8 +683,46 @@ export const ContactBlock: React.FC<BlockProps> = ({ content, theme, onUpdate, r
                     <EditableText value={content.address} onChange={(val) => handleChange('address', val)} readOnly={readOnly} />
                 </div>
             )}
+            {userType === 'enterprise' && content.showOpeningHours !== false && (
+                <div className="flex flex-col items-center gap-2">
+                    <Clock className={theme.primaryColor}/> 
+                    <EditableText value={content.openingHours || "Lun-Ven: 9h-17h"} onChange={(val) => handleChange('openingHours', val)} readOnly={readOnly} />
+                </div>
+            )}
         </div>
       </div>
     </div>
   );
-}; 
+};
+
+// --- 8. PARTNERS BLOCK ---
+export const PartnersBlock: React.FC<BlockProps> = ({ content, theme, onUpdate, readOnly = false, userType }) => {
+  const { font } = getThemeClasses(theme);
+  
+  if (userType !== 'enterprise') return null;
+
+  return (
+    <div className={`py-20 px-6 bg-black/30 backdrop-blur-sm ${font}`}>
+      <div className="max-w-6xl mx-auto">
+        <EditableText
+          tag="h2"
+          className="text-2xl font-bold text-center text-white mb-12 uppercase tracking-widest opacity-50"
+          value={content.sectionTitle || "Ils nous font confiance"}
+          onChange={(val) => onUpdate && onUpdate({ ...content, sectionTitle: val })}
+          readOnly={readOnly}
+        />
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-12 items-center">
+          {(content.partners || []).map((partner: any, idx: number) => (
+            <div key={idx} className="flex items-center justify-center group">
+              <img 
+                src={partner.logoUrl} 
+                alt={partner.name} 
+                className="max-h-12 w-auto grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all duration-300"
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};

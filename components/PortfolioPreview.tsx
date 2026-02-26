@@ -9,21 +9,18 @@ import {
   ShoppingBag, Menu, X as CloseIcon, ChevronRight, ChevronLeft, ArrowLeft,
   CheckCircle, Sparkles, ShoppingCart, Calendar, UserPlus, Ban
 } from 'lucide-react';
-import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import vCard from 'vcf';
 
 import { EXCHANGE_RATE, TEMPLATES, GOOGLE_FONTS_URL } from '../config/constants';
-import { EditableText } from './ui/Editable';
 
 const getTemplateStyles = (templateId: string) => {
   return TEMPLATES[templateId] || TEMPLATES['gold-luxury'];
 };
 
 import TestimonialsLego from './TestimonialsLego';
-import ActionBlock from './ActionBlock';
-import HeroBlock from './HeroBlock';
 
-const generateWhatsAppLink = (phone: string, itemName: string, type: 'commander' | 'réserver' | 'discuter de', creatorName?: string) => {
+const generateWhatsAppLink = (phone: string, itemName: string, type: 'commander' | 'réserver' | 'discuter de') => {
   if (!phone) return '#';
   // Nettoyage rigoureux : ne garder que les chiffres
   let cleanPhone = phone.replace(/\D/g, '');
@@ -35,11 +32,11 @@ const generateWhatsAppLink = (phone: string, itemName: string, type: 'commander'
     cleanPhone = '243' + cleanPhone;
   }
 
-  const message = `Bonjour ${creatorName || ''}! Je vous contacte depuis votre portfolio My Folio-Tag. Je souhaite ${type} : *${itemName}*.`;
+  const message = `Bonjour ! Je vous contacte depuis votre portfolio My Folio-Tag. Je souhaite ${type} : *${itemName}*.`;
   return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
 };
 
-const CatalogueLegos = ({ items, phone, creatorName, creatorData, theme }: { items: any[], phone: string, creatorName?: string, creatorData: any, theme?: any }) => {
+const CatalogueLegos = ({ items, phone, title }: { items: any[], phone: string, title?: string }) => {
   const [currency, setCurrency] = useState('USD');
 
   const convertPrice = (price: string) => {
@@ -54,8 +51,8 @@ const CatalogueLegos = ({ items, phone, creatorName, creatorData, theme }: { ite
   return (
   <section id="portfolio" className="py-32 px-6 max-w-7xl mx-auto">
     <div className="text-center mb-16">
-      <EditableText tag="h3" className="text-[#FFD700] text-sm font-bold uppercase tracking-widest mb-2" value={creatorData?.labels?.catalogueSubtitle} onChange={(val) => { /* Logic to update in Wizard */ }} placeholder="Catalogue" readOnly={true} />
-      <EditableText tag="h2" className="text-4xl md:text-5xl font-bold text-white font-serif" value={creatorData?.labels?.catalogueTitle} onChange={(val) => { /* Logic to update in Wizard */ }} placeholder="Articles & Tarifs" readOnly={true} />
+      <h3 className="text-[#FFD700] text-sm font-bold uppercase tracking-widest mb-2">{title || 'Catalogue'}</h3>
+      <h2 className="text-4xl md:text-5xl font-bold text-white font-serif">Articles & Tarifs</h2>
       <div className="mt-4">
         <button onClick={() => setCurrency('USD')} className={`px-4 py-2 rounded-l-full ${currency === 'USD' ? 'bg-gold-400 text-black' : 'bg-white/10 text-white'}`}>USD</button>
         <button onClick={() => setCurrency('CDF')} className={`px-4 py-2 rounded-r-full ${currency === 'CDF' ? 'bg-gold-400 text-black' : 'bg-white/10 text-white'}`}>CDF</button>
@@ -81,7 +78,7 @@ const CatalogueLegos = ({ items, phone, creatorName, creatorData, theme }: { ite
             <p className="text-gray-500 text-sm mb-6 line-clamp-2">{item.description}</p>
             {phone ? (
               <a 
-                href={generateWhatsAppLink(phone, item.title, 'commander', creatorName)}
+                href={generateWhatsAppLink(phone, item.title, 'commander')}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full py-3 bg-white/5 border border-white/10 text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-[#FFD700] hover:text-black transition flex items-center justify-center gap-2"
@@ -100,11 +97,11 @@ const CatalogueLegos = ({ items, phone, creatorName, creatorData, theme }: { ite
   </section>
 )};
 
-const ServicesLegos = ({ items, phone, creatorName, creatorData, theme }: { items: any[], phone: string, creatorName?: string, creatorData: any, theme?: any }) => (
+const ServicesLegos = ({ items, phone, title }: { items: any[], phone: string, title?: string }) => (
   <section id="portfolio" className="py-32 px-6 max-w-7xl mx-auto">
     <div className="text-center mb-16">
-      <EditableText tag="h3" className="text-[#FFD700] text-sm font-bold uppercase tracking-widest mb-2" value={creatorData?.labels?.servicesSubtitle} onChange={(val) => { /* Logic to update in Wizard */ }} placeholder="Services" readOnly={true} />
-      <EditableText tag="h2" className="text-4xl md:text-5xl font-bold text-white font-serif" value={creatorData?.labels?.servicesTitle} onChange={(val) => { /* Logic to update in Wizard */ }} placeholder="Prestations & Expertise" readOnly={true} />
+      <h3 className="text-[#FFD700] text-sm font-bold uppercase tracking-widest mb-2">{title || 'Services'}</h3>
+      <h2 className="text-4xl md:text-5xl font-bold text-white font-serif">Prestations & Expertise</h2>
     </div>
     <div className="space-y-6">
       {items.map((item, idx) => (
@@ -123,7 +120,7 @@ const ServicesLegos = ({ items, phone, creatorName, creatorData, theme }: { item
             <div className="text-2xl font-black text-white">{item.price}</div>
             {phone ? (
               <a 
-                href={generateWhatsAppLink(phone, item.title, 'réserver', creatorName)}
+                href={generateWhatsAppLink(phone, item.title, 'réserver')}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="px-6 py-3 bg-[#FFD700] text-black rounded-full font-bold text-xs uppercase tracking-widest hover:bg-white transition flex items-center gap-2"
@@ -167,12 +164,10 @@ const PortfolioPreview: React.FC<PortfolioPreviewProps> = ({ config, phone, crea
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
   const [posts, setPosts] = useState<PortfolioPost[]>([]);
-  const { scrollYProgress } = useScroll();
-  const parallaxY = useTransform(scrollYProgress, [0, 1], [0, 300]);
 
   const handleVCardExport = () => {
     const card = new vCard();
-    card.add('fn', config?.sections?.find(s => s.type === 'hero')?.content?.title || "Prestataire");
+    card.add('fn', config.sections.find(s => s.type === 'hero')?.content.title);
     if (phone) {
       card.add('tel', phone, { type: 'work' });
     }
@@ -184,7 +179,7 @@ const PortfolioPreview: React.FC<PortfolioPreviewProps> = ({ config, phone, crea
 
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${config?.sections?.find(s => s.type === 'hero')?.content?.title || "Prestataire"}.vcf`;
+    a.download = `${config.sections.find(s => s.type === 'hero')?.content.title}.vcf`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -226,12 +221,19 @@ const PortfolioPreview: React.FC<PortfolioPreviewProps> = ({ config, phone, crea
   }, [creatorId]);
 
   // EXTRACTION DES DONNÉES
-  const sections = config?.sections || [];
+  const sections = config.sections;
   const hero = sections.find(s => s.type === 'hero')?.content || {};
   const bio = sections.find(s => s.type === 'bio')?.content || {};
   const contact = sections.find(s => s.type === 'contact')?.content || {};
   const services = sections.find(s => s.type === 'services')?.content?.items || [];
   const gallery = sections.find(s => s.type === 'gallery')?.content?.images || [];
+  const catalogSection = sections.find(s => s.type === 'catalog')?.content || {};
+  const testimonialsSection = sections.find(s => s.type === 'testimonials')?.content || {};
+  const partnersSection = sections.find(s => s.type === 'partners')?.content || {};
+  const experienceSection = sections.find(s => s.type === 'experience')?.content || {};
+  const socialSection = sections.find(s => s.type === 'social')?.content || {};
+  const skillsSection = sections.find(s => s.type === 'services')?.content || {};
+  const projectsSection = sections.find(s => s.type === 'gallery')?.content || {};
   
   // Stats (si injectées) ou fallback
   const stats = bio.stats || { years: 5, projects: 20 };
@@ -253,46 +255,12 @@ const PortfolioPreview: React.FC<PortfolioPreviewProps> = ({ config, phone, crea
     }
   };
 
-  // --- ÉCRASEMENT DICTATORIAL DU THÈME ---
-  // On force le thème Noir & Or peu importe ce qui est en DB
-  const forcedTheme = { 
-    ...(config?.theme || {}), 
-    primaryColor: 'text-gold-500', 
-    style: 'elegant', 
-    backgroundColor: 'bg-black' 
-  };
-  
-  const styles = {
-    ...getTemplateStyles('gold-luxury'),
-    primary: 'text-gold-500',
-    bg: 'bg-black',
-    cardBg: 'bg-[#111]',
-    borderColor: 'border-white/10',
-    text: 'text-white',
-    buttonBg: 'bg-[#FFD700] hover:bg-[#FDB931]',
-    buttonText: 'text-black',
-  };
+  // STYLES
+  // Logique de verrouillage des thèmes : si pas premium/vip, force le thème par défaut
+  const isPremium = creatorData?.plan === 'premium' || creatorData?.plan === 'vip';
+  const effectiveTemplateId = isPremium ? creatorData?.templateId : 'gold-luxury';
+  const styles = getTemplateStyles(effectiveTemplateId);
   const fontSerif = styles.font;
-  const activeColor = forcedTheme.primaryColor;
-
-  // --- NETTOYAGE DES TEXTES FANTÔMES ---
-  const cleanGhostText = (text: string, fallback: string) => {
-    if (!text) return fallback;
-    const ghosts = [
-      'Créer avec passion...', 
-      'Expertise et Excellence', 
-      'Un service sur-mesure adapté à vos besoins spécifiques.',
-      'Artiste',
-      'Créatif'
-    ];
-    if (ghosts.some(g => text.includes(g))) {
-      return fallback;
-    }
-    return text;
-  };
-
-  const cleanBioTagline = cleanGhostText(bio.tagline || bio.title, creatorData?.profession || '');
-  const cleanBioDesc = cleanGhostText(bio.description, '');
 
   // --- COMPONENTS ---
 
@@ -399,7 +367,7 @@ const PortfolioPreview: React.FC<PortfolioPreviewProps> = ({ config, phone, crea
   // --- SECTIONS ---
 
   return (
-    <div className={`bg-black text-white font-sans selection:bg-[#FFD700] selection:text-black overflow-x-hidden min-h-screen`}>
+    <div className={`${styles.bg} ${styles.text} ${styles.font} selection:${styles.buttonBg} selection:${styles.buttonText} overflow-x-hidden min-h-screen`}>
       {isIsolated && (
         <div className="fixed top-0 left-0 w-full bg-red-600 text-white text-center py-1.5 text-xs font-bold z-[100] uppercase tracking-widest shadow-lg">
           MODE SITE ISOLÉ ACTIVÉ - PRESTATAIRE : {creatorName}
@@ -415,15 +383,63 @@ const PortfolioPreview: React.FC<PortfolioPreviewProps> = ({ config, phone, crea
       <Navbar />
       <Lightbox />
 
-      <HeroBlock 
-        hero={hero} 
-        styles={styles} 
-        fontSerif={fontSerif} 
-        scrollToSection={scrollToSection} 
-        handleVCardExport={handleVCardExport} 
-        parallaxY={parallaxY} 
-        theme={forcedTheme}
-      />
+      {/* 1. HERO SECTION */}
+      <section id="hero" className="relative h-screen w-full flex items-center justify-center overflow-hidden">
+        <div 
+            className="absolute inset-0 bg-cover bg-center bg-fixed"
+            style={{ backgroundImage: `url(${hero.backgroundImage || "https://images.unsplash.com/photo-1600607686527-6fb886090705?auto=format&fit=crop&w=2000&q=80"})` }}
+        ></div>
+        <div className="absolute inset-0 bg-black" style={{ opacity: styles.overlayOpacity || 0.7 }}></div>
+        
+        <div className="relative z-10 text-center px-4 max-w-5xl mx-auto">
+            <motion.h1 
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+              className={`text-6xl md:text-9xl font-bold text-white mb-4 ${fontSerif} tracking-tighter`}
+            >
+                {hero.title}
+            </motion.h1>
+            
+            <motion.h2 
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+              className="text-xl md:text-3xl text-[#FFD700] font-light tracking-[0.2em] uppercase mb-12"
+            >
+                {hero.subtitle}
+            </motion.h2>
+
+            <motion.button 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+              onClick={() => scrollToSection('portfolio')}
+              className={`px-10 py-4 ${styles.buttonBg} ${styles.buttonText} font-bold uppercase tracking-widest transition duration-300 rounded-sm`}
+            >
+                Voir mes projets
+            </motion.button>
+            <motion.button 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, delay: 0.6 }}
+              onClick={handleVCardExport}
+              className="px-10 py-4 bg-transparent border border-[#FFD700] text-[#FFD700] font-bold uppercase tracking-widest hover:bg-[#FFD700] hover:text-black transition duration-300 rounded-sm flex items-center justify-center gap-2"
+            >
+                <UserPlus size={16}/> Ajouter aux contacts
+            </motion.button>
+        </div>
+
+        {/* Scroll Indicator */}
+        <motion.div 
+          animate={{ y: [0, 10, 0] }}
+          transition={{ repeat: Infinity, duration: 2 }}
+          className="absolute bottom-10 left-1/2 -translate-x-1/2 text-gray-500 flex flex-col items-center gap-2"
+        >
+            <span className="text-[10px] uppercase tracking-widest">Scroll</span>
+            <div className="w-px h-12 bg-gradient-to-b from-gray-500 to-transparent"></div>
+        </motion.div>
+      </section>
 
       {/* 2. BIO SECTION (Magazine Layout) */}
       <motion.section 
@@ -434,13 +450,13 @@ const PortfolioPreview: React.FC<PortfolioPreviewProps> = ({ config, phone, crea
         viewport={{ once: true }}
         transition={{ duration: 0.8 }}
       >
-         <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
+         <div className={`grid grid-cols-1 ${creatorData?.userType === 'enterprise' ? 'lg:grid-cols-1' : 'lg:grid-cols-12'} gap-16 items-center`}>
             {/* Image (Asymétrique) */}
             <div 
-              className="lg:col-span-5 relative"
+              className={`${creatorData?.userType === 'enterprise' ? 'w-full max-w-4xl mx-auto' : 'lg:col-span-5'} relative`}
             >
                 <div className={`absolute top-4 -left-4 w-full h-full border-2 ${styles.borderColor} z-0`}></div>
-                <div className="relative z-10 aspect-[3/4] overflow-hidden bg-gray-900 grayscale hover:grayscale-0 transition duration-700">
+                <div className={`relative z-10 ${creatorData?.userType === 'enterprise' ? 'aspect-video' : 'aspect-[3/4]'} overflow-hidden bg-gray-900 grayscale hover:grayscale-0 transition duration-700`}>
                     <img 
                       src={bio.image || "https://via.placeholder.com/600x800"} 
                       className="w-full h-full object-cover" 
@@ -451,34 +467,56 @@ const PortfolioPreview: React.FC<PortfolioPreviewProps> = ({ config, phone, crea
 
             {/* Content */}
             <div 
-              className="lg:col-span-7"
+              className={`${creatorData?.userType === 'enterprise' ? 'text-center max-w-4xl mx-auto' : 'lg:col-span-7'}`}
             >
-                <h3 className={`${styles.primary} text-sm font-bold uppercase tracking-widest mb-4 flex items-center gap-2`}>
-                   <span className={`w-8 h-px bg-[#FFD700]`}></span> À Propos
+                <h3 className={`${styles.primary} text-sm font-bold uppercase tracking-widest mb-4 flex items-center ${creatorData?.userType === 'enterprise' ? 'justify-center' : ''} gap-2`}>
+                   <span className={`w-8 h-px bg-${styles.primary}`}></span> {bio.sectionTitle || (creatorData?.userType === 'enterprise' ? 'Qui sommes-nous ?' : 'À Propos')}
                 </h3>
-                <h2 className={`text-4xl md:text-6xl font-bold text-white mb-8 ${fontSerif} leading-tight`}>
-                  {cleanBioTagline || 'Expertise et Excellence'}
+                <h2 className={`text-4xl md:text-6xl font-bold ${styles.text} mb-8 ${fontSerif} leading-tight`}>
+                  {bio.headline || (creatorData?.userType === 'enterprise' ? 'L\'excellence au service de votre vision.' : 'Créer avec passion, livrer avec excellence.')}
                 </h2>
+                
+                {creatorData?.userType === 'enterprise' && (
+                  <div className="flex flex-wrap justify-center gap-4 mb-8">
+                    {creatorData?.foundedYear && (
+                      <div className={`px-4 py-2 bg-white/5 border ${styles.borderColor} rounded-full flex items-center gap-2`}>
+                        <Calendar size={14} className={styles.primary}/>
+                        <span className="text-xs font-bold text-white uppercase tracking-widest">Créé en {creatorData.foundedYear}</span>
+                      </div>
+                    )}
+                    {creatorData?.keyFigures && (
+                      <div className={`px-4 py-2 bg-white/5 border ${styles.borderColor} rounded-full flex items-center gap-2`}>
+                        <Star size={14} className={styles.primary}/>
+                        <span className="text-xs font-bold text-white uppercase tracking-widest">{creatorData.keyFigures}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <div className="text-gray-400 text-lg leading-relaxed space-y-6 mb-12 font-light">
-                   <p>{cleanBioDesc || "Bienvenue dans mon univers créatif."}</p>
+                   <p>{bio.description || "Je suis un visionnaire dédié à transformer vos idées en réalité tangible. Mon approche combine esthétique intemporelle et fonctionnalité moderne."}</p>
                 </div>
 
-                {/* Stats */}
-                <div className={`grid grid-cols-2 gap-8 border-t ${styles.borderColor} pt-8`}>
-                    <div>
-                        <span className={`block text-5xl font-bold ${styles.text} mb-2 ${fontSerif}`}>{stats.years}+</span>
-                        <span className="text-xs text-gray-500 uppercase tracking-widest">Années d'expérience</span>
-                    </div>
-                    <div>
-                        <span className={`block text-5xl font-bold ${styles.text} mb-2 ${fontSerif}`}>{stats.projects}</span>
-                        <span className="text-xs text-gray-500 uppercase tracking-widest">Projets Livrés</span>
-                    </div>
-                </div>
+                {/* Stats (Only for individual or if enterprise has them) */}
+                {creatorData?.userType !== 'enterprise' && (
+                  <div className={`grid grid-cols-2 gap-8 border-t ${styles.borderColor} pt-8`}>
+                      <div>
+                          <span className={`block text-5xl font-bold ${styles.text} mb-2 ${fontSerif}`}>{stats.years}+</span>
+                          <span className="text-xs text-gray-500 uppercase tracking-widest">Années d'expérience</span>
+                      </div>
+                      <div>
+                          <span className={`block text-5xl font-bold ${styles.text} mb-2 ${fontSerif}`}>{stats.projects}</span>
+                          <span className="text-xs text-gray-500 uppercase tracking-widest">Projets Livrés</span>
+                      </div>
+                  </div>
+                )}
 
-                {/* Signature */}
-                <div className={`mt-12 font-serif italic text-3xl ${styles.primary} opacity-80`}>
-                  {bio.name}
-                </div>
+                {/* Signature (Only for individual) */}
+                {creatorData?.userType !== 'enterprise' && (
+                  <div className={`mt-12 font-serif italic text-3xl ${styles.primary} opacity-80`}>
+                    {bio.name}
+                  </div>
+                )}
             </div>
          </div>
       </motion.section>
@@ -494,34 +532,27 @@ const PortfolioPreview: React.FC<PortfolioPreviewProps> = ({ config, phone, crea
       >
          <div className="max-w-7xl mx-auto px-6">
             <div className="text-center mb-20">
-                <EditableText 
-                  tag="h2" 
-                  className={`text-4xl md:text-5xl font-bold ${styles.text} mb-4 ${fontSerif}`} 
-                  value={creatorData?.labels?.services} 
-                  onChange={(val) => { /* Logic to update in Wizard */ }} 
-                  placeholder="Ce Que Je Propose" 
-                  readOnly={true} 
-                />
-                <div className={`w-24 h-1 bg-[#FFD700] mx-auto`}></div>
+                <h2 className={`text-4xl md:text-5xl font-bold ${styles.text} mb-4 ${fontSerif}`}>{skillsSection.sectionTitle || 'Ce Que Je Propose'}</h2>
+                <div className={`w-24 h-1 bg-${styles.primary} mx-auto`}></div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                {services.map((item: any, idx: number) => (
                   <div 
                     key={idx}
-                    className={`group ${styles.cardBg} border ${styles.borderColor} p-8 hover:-translate-y-2 transition-all duration-300 hover:border-[#FFD700] relative overflow-hidden`}
+                    className={`group ${styles.cardBg} border ${styles.borderColor} p-8 hover:-translate-y-2 transition-all duration-300 hover:border-${styles.primary} relative overflow-hidden`}
                   >
                       <div className={`absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition`}>
                          <Star size={80} />
                       </div>
                       
-                      <div className={`w-12 h-12 bg-[#FFD700]/10 rounded-full flex items-center justify-center ${styles.primary} mb-6 group-hover:bg-[#FFD700] group-hover:text-black transition`}>
+                      <div className={`w-12 h-12 bg-${styles.primary}/10 rounded-full flex items-center justify-center ${styles.primary} mb-6 group-hover:bg-${styles.primary} group-hover:text-black transition`}>
                          <CheckCircle size={24} />
                       </div>
 
                       <h3 className={`text-2xl font-bold ${styles.text} mb-3 ${fontSerif}`}>{item.title || item.name}</h3>
                       <p className="text-gray-400 text-sm leading-relaxed mb-6">
-                        {cleanGhostText(item.description, "Un service sur-mesure adapté à vos besoins spécifiques.")}
+                        {item.description || "Un service sur-mesure adapté à vos besoins spécifiques."}
                       </p>
                       
                       {item.price && (
@@ -541,14 +572,7 @@ const PortfolioPreview: React.FC<PortfolioPreviewProps> = ({ config, phone, crea
             <div className="flex justify-between items-end mb-16">
                 <div>
                    <h3 className={`${styles.primary} text-sm font-bold uppercase tracking-widest mb-2`}>Portfolio</h3>
-                   <EditableText 
-                     tag="h2" 
-                     className={`text-4xl md:text-5xl font-bold ${styles.text} ${styles.font}`} 
-                     value={creatorData?.portfolioTitle} 
-                     onChange={(val) => { /* Logic to update in Wizard */ }} 
-                     placeholder="Mes Réalisations" 
-                     readOnly={true} 
-                   />
+                   <h2 className={`text-4xl md:text-5xl font-bold ${styles.text} ${styles.font}`}>{projectsSection.sectionTitle || 'Mes Réalisations'}</h2>
                 </div>
                 <div className="hidden md:block text-gray-500 text-sm">
                    Une sélection de mes meilleurs travaux
@@ -583,39 +607,49 @@ const PortfolioPreview: React.FC<PortfolioPreviewProps> = ({ config, phone, crea
       )}
 
       {config.layoutType === 'CATALOGUE' && (
-        <CatalogueLegos items={services} phone={contact.actionValue || contact.phone} creatorName={creatorName} creatorData={creatorData} theme={forcedTheme} />
+        <CatalogueLegos items={services} phone={contact.actionValue || contact.phone} title={catalogSection.sectionTitle} />
       )}
 
       {config.layoutType === 'SERVICES' && (
-        <ServicesLegos items={services} phone={contact.actionValue || contact.phone} creatorName={creatorName} creatorData={creatorData} theme={forcedTheme} />
+        <ServicesLegos items={services} phone={contact.actionValue || contact.phone} title={skillsSection.sectionTitle} />
       )}
 
-      <TestimonialsLego 
-        content={creatorData?.sections?.find(s => s.type === 'testimonials')?.content || { items: [] }}
-        styles={styles} 
-        readOnly={true}
-        theme={forcedTheme}
-      />
+      <TestimonialsLego items={sections.find(s => s.type === 'testimonials')?.content?.items || []} styles={styles} title={testimonialsSection.sectionTitle} />
+
+      {/* 4.5 PARTNERS SECTION (Enterprise only) */}
+      {creatorData?.userType === 'enterprise' && creatorData?.partners && creatorData.partners.length > 0 && (
+        <section className="py-20 px-6 bg-white/5 border-y border-white/5">
+           <div className="max-w-7xl mx-auto">
+              <h3 className="text-center text-xs font-bold text-gray-500 uppercase tracking-[0.3em] mb-12">{partnersSection.sectionTitle || 'Ils nous font confiance'}</h3>
+              <div className="flex flex-wrap justify-center items-center gap-12 md:gap-20">
+                 {creatorData.partners.map((partner: any, idx: number) => (
+                   <motion.img 
+                     key={idx}
+                     initial={{ opacity: 0 }}
+                     whileInView={{ opacity: 0.5 }}
+                     whileHover={{ opacity: 1, filter: 'grayscale(0)' }}
+                     src={partner.logoUrl} 
+                     alt={partner.name} 
+                     className="h-8 md:h-12 w-auto grayscale transition-all duration-500"
+                   />
+                 ))}
+              </div>
+           </div>
+        </section>
+      )}
 
       {/* 5. ACTUALITÉS SECTION (Social Wall) */}
       <section id="news" className="py-32 px-6 max-w-7xl mx-auto border-t border-white/5">
           <div className="flex items-center gap-4 mb-16">
-              <EditableText 
-                tag="h2" 
-                className={`text-3xl md:text-4xl font-bold ${styles.text} ${fontSerif}`} 
-                value={creatorData?.labels?.news} 
-                onChange={(val) => { /* Logic to update in Wizard */ }} 
-                placeholder="Actualités" 
-                readOnly={true} 
-              />
+              <h2 className={`text-3xl md:text-4xl font-bold ${styles.text} ${fontSerif}`}>{socialSection.sectionTitle || 'Actualités'}</h2>
               <div className="h-px flex-grow bg-white/10"></div>
           </div>
 
           {posts.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 {posts.map((post) => (
-                    <div key={post.id} className={`group relative overflow-hidden border p-8 transition duration-300 ${styles.cardBg} ${styles.borderColor} hover:border-[#FFD700]`}>
-                        <div className={`absolute top-0 left-0 w-1 h-full bg-[#FFD700] transform -translate-y-full group-hover:translate-y-0 transition duration-500`}></div>
+                    <div key={post.id} className={`group relative overflow-hidden border p-8 transition duration-300 ${styles.cardBg} ${styles.borderColor} hover:border-${styles.primary}`}>
+                        <div className={`absolute top-0 left-0 w-1 h-full bg-${styles.primary} transform -translate-y-full group-hover:translate-y-0 transition duration-500`}></div>
                         
                         <div className="flex justify-between items-start mb-6">
                             <Sparkles size={16} className={`${styles.primary}`} />
@@ -648,39 +682,38 @@ const PortfolioPreview: React.FC<PortfolioPreviewProps> = ({ config, phone, crea
           )}
       </section>
 
-      {/* 6. ACTION ROYALE */}
-      <ActionBlock creatorData={creatorData} styles={styles} theme={forcedTheme} />
+      {/* 6. CONTACT & FOOTER */}
+      <ContactSection creatorData={creatorData} styles={styles} />
 
-      {/* 7. CONTACT & FOOTER */}
-      <ContactSection creatorData={creatorData} styles={styles} creatorName={creatorName} theme={forcedTheme} />
-
-      
+      <RecruitmentSection />
     </div>
   );
 };
 
-
-
-const ContactSection = ({ creatorData, styles, creatorName, theme }: { creatorData: any, styles: any, creatorName?: string, theme?: any }) => {
+const ContactSection = ({ creatorData, styles }) => {
   if (!creatorData) return null;
 
   const labels = creatorData?.labels || {};
   const contact = creatorData?.sections?.find(s => s.type === 'contact')?.content || {};
   const phone = contact.actionValue || contact.phone;
 
-  
+  if (creatorData?.googleFormUrl) {
+    return (
+      <section id="contact" className={`py-32 ${styles.cardBg}`}>
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className={`text-4xl md:text-6xl font-bold ${styles.text} ${styles.font} mb-8`}>{labels.contact || 'Contactez-moi'}</h2>
+          <div className="aspect-w-16 aspect-h-9">
+            <iframe src={creatorData.googleFormUrl} width="100%" height="800" frameBorder="0" marginHeight={0} marginWidth={0}>Chargement…</iframe>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section id="contact" className={`${styles.cardBg} pt-32 pb-10 px-6 border-t ${styles.borderColor}`}>
        <div className="max-w-4xl mx-auto text-center mb-20">
-           <EditableText 
-             tag="h2" 
-             className={`text-4xl md:text-6xl font-bold ${styles.text} ${styles.font} mb-8`} 
-             value={labels.contact} 
-             onChange={(val) => { /* Logic to update in Wizard */ }} 
-             placeholder="Travaillons Ensemble" 
-             readOnly={true} 
-           />
+           <h2 className={`text-4xl md:text-6xl font-bold ${styles.text} ${styles.font} mb-8`}>{labels.contact || 'Travaillons Ensemble'}</h2>
            <p className="text-gray-400 text-lg mb-12 max-w-2xl mx-auto">
              Vous avez un projet ? Une vision ? Je suis là pour la concrétiser. Contactez-moi dès aujourd'hui.
            </p>
@@ -689,7 +722,7 @@ const ContactSection = ({ creatorData, styles, creatorName, theme }: { creatorDa
               {phone && (
                 <>
                   <a 
-                    href={generateWhatsAppLink(phone, "votre expertise", "discuter de", creatorName)} 
+                    href={generateWhatsAppLink(phone, "votre expertise", "discuter de")} 
                     target="_blank"
                     rel="noopener noreferrer"
                     className={`px-8 py-4 ${styles.buttonBg} ${styles.buttonText} font-bold uppercase tracking-widest transition duration-300 flex items-center justify-center gap-2`}
@@ -698,7 +731,7 @@ const ContactSection = ({ creatorData, styles, creatorName, theme }: { creatorDa
                   </a>
                   <a 
                     href={`tel:${phone.replace(/\D/g, '')}`} 
-                    className={`px-8 py-4 border ${styles.borderColor} ${styles.primary} font-bold uppercase tracking-widest hover:bg-[#FFD700] hover:text-black transition duration-300 flex items-center justify-center gap-2`}
+                    className={`px-8 py-4 border ${styles.borderColor} ${styles.primary} font-bold uppercase tracking-widest hover:${styles.buttonBg} hover:${styles.buttonText} transition duration-300 flex items-center justify-center gap-2`}
                   >
                     <Phone size={20}/> Appeler Directement
                   </a>
@@ -713,6 +746,21 @@ const ContactSection = ({ creatorData, styles, creatorName, theme }: { creatorDa
                 </a>
               )}
            </div>
+
+           {creatorData?.userType === 'enterprise' && creatorData?.openingHours && (
+             <div className="mt-12 flex items-center justify-center gap-3 text-gray-400">
+                <Clock size={18} className={styles.primary}/>
+                <span className="text-sm font-medium">Horaires : {creatorData.openingHours}</span>
+             </div>
+           )}
+
+           {creatorData?.userType === 'enterprise' && creatorData?.legal && (
+             <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto text-[10px] text-gray-600 uppercase tracking-widest border-t border-white/5 pt-8">
+                {creatorData.legal.rccm && <div>RCCM: {creatorData.legal.rccm}</div>}
+                {creatorData.legal.idNat && <div>ID NAT: {creatorData.legal.idNat}</div>}
+                {creatorData.legal.nif && <div>NIF: {creatorData.legal.nif}</div>}
+             </div>
+           )}
        </div>
 
        <div className={`max-w-7xl mx-auto border-t ${styles.borderColor} pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-gray-600`}>
@@ -725,6 +773,12 @@ const ContactSection = ({ creatorData, styles, creatorName, theme }: { creatorDa
   );
 };
 
+const RecruitmentSection = () => (
+  <section className="bg-black py-8 px-6 text-center border-t border-white/10">
+    <p className="text-gray-600 text-xs">
+      Propulsé par <a href="https://my-folio-tag.com" target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-[#FFD700] transition">My Folio-Tag</a> • <a href="https://my-folio-tag.com" target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-[#FFD700] transition">Créer mon Portfolio</a>
+    </p>
+  </section>
+);
 
-
-export default PortfolioPreview; 
+export default PortfolioPreview;
