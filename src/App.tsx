@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import SplashScreen from './components/SplashScreen';
-import TermsPage from './pages/Terms';
+import Terms from './pages/Terms';
 import { AppView, CreatorProfile, TemplateConfig } from './types';
 import Wizard from './pages/Wizard';
-import ArenaPage from './pages/Arena';
-import RegisterPage from './pages/Register';
-import LoginPage from './pages/Login';
-import AdminDashboard from './pages/admin';
+import Arena from './pages/Arena';
+import Register from './pages/Register';
+import Login from './pages/Login';
+import Admin from './pages/Admin';
+import Profile from './pages/Profile';
 import PortfolioPreview from './components/PortfolioPreview';
 import ErrorBoundary from './components/ErrorBoundary';
 import SEO from './components/SEO';
@@ -285,13 +286,15 @@ const App: React.FC = () => {
     case AppView.WIZARD:
       return <Wizard platformPrice={platformPrice} onBack={() => setView(AppView.LANDING)} onPublish={handlePublish} onAuthRedirect={() => setView(AppView.REGISTER)} onNavigate={setView} />;
     case AppView.REGISTER:
-      return <RegisterPage onNavigate={setView} />;
+      return <Register onNavigate={setView} />;
     case AppView.LOGIN:
-      return <LoginPage onNavigate={setView} />;
+      return <Login onNavigate={setView} />;
     case AppView.ADMIN:
-      return <AdminDashboard onNavigate={setView} />;
+      return <Admin onNavigate={setView} />;
     case AppView.TERMS:
-      return <TermsPage onNavigate={setView} />;
+      return <Terms onNavigate={setView} />;
+    case AppView.PROFILE:
+      return <Profile userId={selectedCreator?.id || ""} onNavigate={setView} />;
     case AppView.ARENA:
       if (selectedCreator) {
         return (
@@ -316,7 +319,7 @@ const App: React.FC = () => {
           </div>
         );
       }
-      return <ArenaPage creators={creators} onSelectCreator={setSelectedCreator} onNavigate={setView} />;
+      return <Arena creators={creators} onSelectCreator={setSelectedCreator} onNavigate={setView} />;
     default:
       return <div className="min-h-screen bg-black flex items-center justify-center text-[#FFD700]">Chargement de l'Empire...</div>;
   }
