@@ -37,20 +37,10 @@ const HeroBlock = ({ hero, styles, fontSerif, scrollToSection, handleVCardExport
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, delay: 0.4 }}
-            onClick={() => {
-              if (hero.link) {
-                if (hero.link.startsWith('#')) {
-                  scrollToSection(hero.link.substring(1));
-                } else {
-                  window.open(hero.link, '_blank');
-                }
-              } else {
-                scrollToSection('portfolio');
-              }
-            }}
+            onClick={() => scrollToSection('portfolio')}
             className={`px-10 py-4 ${styles.buttonBg} ${styles.buttonText} font-bold uppercase tracking-widest transition duration-300 rounded-sm`}
           >
-              {hero.buttonText || "Voir mes projets"}
+              Voir mes projets
           </motion.button>
           <motion.button 
             initial={{ opacity: 0, scale: 0.9 }}

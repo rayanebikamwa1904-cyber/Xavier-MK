@@ -1,7 +1,19 @@
 import React from 'react';
 
-const GlassCard: React.FC<any> = (props) => {
-  return <div {...props} />; 
+interface GlassCardProps extends React.HTMLAttributes<HTMLDivElement> {
+  children: React.ReactNode;
+  className?: string;
+}
+
+const GlassCard: React.FC<GlassCardProps> = ({ children, className = '', ...props }) => {
+  return (
+    <div
+      className={`bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl shadow-glass ${className}`}
+      {...props}
+    >
+      {children}
+    </div>
+  );
 };
 
 export default GlassCard;

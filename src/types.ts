@@ -1,58 +1,37 @@
-export enum AppView {
-  LANDING = 'LANDING',
-  WIZARD = 'WIZARD',
-  REGISTER = 'REGISTER',
-  LOGIN = 'LOGIN',
-  ADMIN = 'ADMIN',
-  TERMS = 'TERMS',
-  ARENA = 'ARENA',
-}
-
-export interface Location {
-  commune: string;
-  address: string;
-}
-
-export interface Theme {
-  primaryColor: string;
-  style: string;
-}
-
-export interface SectionContent {
-  title?: string;
-  subtitle?: string;
+export interface Service {
+  name: string;
+  price: string;
   description?: string;
-  backgroundImage?: string;
-  buttonText?: string;
-  image?: string;
-  name?: string;
-  stats?: {
-    years: number;
-    projects: number;
-  };
-  items?: {
-    name: string;
-    description: string;
-    price: string;
-  }[];
   images?: string[];
-  address?: string;
-  actionValue?: string;
-  phone?: string;
-  email?: string;
-  userAvatar?: string;
-  posts?: any[];
 }
 
-export interface Section {
-  type: 'hero' | 'bio' | 'services' | 'gallery' | 'contact' | 'social';
-  content: SectionContent;
+export interface PortfolioTheme {
+  primaryColor: string;
+  style: 'elegant' | 'modern' | 'tech';
+  font?: string; 
+  layout?: 'imperial' | 'split' | 'minimal';
+  background?: string; // New global background property
 }
 
-export interface Portfolio {
-  theme: Theme;
-  sections: Section[];
-  layoutType: string;
+export interface PortfolioSection {
+  type: 'hero' | 'services' | 'contact' | 'gallery' | 'bio' | 'experience' | 'social' | 'testimonials';
+  content: any;
+}
+
+export interface PortfolioConfig {
+  theme: PortfolioTheme;
+  sections: PortfolioSection[];
+  layoutType?: 'GALLERY' | 'CATALOGUE' | 'SERVICES';
+}
+
+export interface Review {
+  id: string;
+  userId: string;
+  userName: string;
+  userImage?: string;
+  rating: number;
+  comment: string;
+  date: string;
 }
 
 export interface CreatorProfile {
@@ -62,30 +41,56 @@ export interface CreatorProfile {
   rating: number;
   reviewCount: number;
   verified: boolean;
+  portfolio: PortfolioConfig;
   joinedAt: string;
-  location: Location;
-  phone: string;
-  tags: string[];
-  expiryDate?: any;
-  portfolioTitle?: string;
-  labels?: string[];
+  location?: { commune: string; address: string };
+  phone?: string;
+  tags?: string[];
+  expiryDate?: string;
+  labels?: any;
   templateId?: string;
   googleFormUrl?: string;
-  portfolio: Portfolio;
+  portfolioTitle?: string;
   portfolioSlug?: string;
+  layoutType?: string;
 }
 
-export interface Template {
-    id: string;
-    name: string;
-    description: string;
-    previewImage: string;
-    tags: string[];
-    theme: {
-        style: string;
-    };
-    layoutType: 'GALLERY' | 'FEED' | 'MINIMAL';
+export interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  isConfigUpdate?: boolean;
 }
+
+export enum AppView {
+  LANDING = 'LANDING',
+  ARENA = 'ARENA',
+  WIZARD = 'WIZARD',
+  REGISTER = 'REGISTER',
+  LOGIN = 'LOGIN',
+  ADMIN = 'ADMIN',
+  TERMS = 'TERMS',
+}
+
+export interface Testimonial {
+  name: string;
+  review: string;
+  rating: number;
+}
+
+// --- NOUVEAU SYSTÈME DE THÈMES ---
+
+export interface Theme {
+  id: string;
+  name: string;
+  font: string;
+  palette: {
+    background: string;
+    text: string;
+    primary: string;
+    accent: string;
+  };
+}
+
 export interface TemplateConfig {
-    templates: Template[];
+  themes: Theme[];
 }

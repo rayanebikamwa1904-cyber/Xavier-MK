@@ -1,4 +1,4 @@
-import React, { Component, ErrorInfo, ReactNode } from "react";
+import React, { ErrorInfo, ReactNode } from "react";
 
 interface Props {
   children: ReactNode;
@@ -8,22 +8,36 @@ interface State {
   hasError: boolean;
 }
 
-class ErrorBoundary extends Component<Props, State> {
-  public state: State = {
-    hasError: false
-  };
+class ErrorBoundary extends React.Component<Props, State> {
+  constructor(props: Props) {
+    super(props);
+    this.state = { hasError: false };
+  }
 
-  public static getDerivedStateFromError(_: Error): State {
+  static getDerivedStateFromError(_: Error): State {
     return { hasError: true };
   }
 
-  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error("Uncaught error:", error, errorInfo);
   }
 
-  public render() {
+  render() {
     if (this.state.hasError) {
-      return <h1>Sorry.. there was an error</h1>;
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-black text-white p-4 text-center">
+            <div>
+                <h1 className="text-2xl font-bold text-red-500 mb-4">Oups, une erreur est survenue.</h1>
+                <p className="text-gray-400 mb-6">Le portfolio ne peut pas s'afficher correctement pour le moment.</p>
+                <button 
+                    onClick={() => window.location.reload()}
+                    className="px-6 py-3 bg-white text-black font-bold rounded-full hover:bg-gray-200 transition"
+                >
+                    Recharger la page
+                </button>
+            </div>
+        </div>
+      );
     }
 
     return this.props.children;
